@@ -43,9 +43,23 @@ export const useDatabase = async <T>(callback: () => Promise<T>): Promise<T> => 
     } catch (error) {
         console.error('Error using database:', error);
         throw error;
-    } finally {
-        if (isConnected()) {
-            await disconnect();
-        }
     }
 }
+
+const gracefulShutdown = async () => {
+    if (isConnected()) {
+        console.log('Disconnection from MongoDB...');
+        await disconnect();
+        console.log('Disconnected from MongoDB.');
+    }
+};
+
+process.on('SIGINT', async () => {
+    await gracefulShutdown();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    await gracefulShutdown();
+    process.exit(0);
+});

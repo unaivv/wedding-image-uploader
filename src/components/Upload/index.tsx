@@ -2,7 +2,8 @@ import { Button, Uploader } from 'rsuite';
 
 const Upload = () => {
     return (
-        <div>
+        <div style={{
+            width: '100%',}}>
             <Uploader
                 action="http://localhost:3000/files/upload"
                 draggable
@@ -13,18 +14,33 @@ const Upload = () => {
                     eventId: '683ef05ad8795795535d3b4f',
                     userName: 'victor',
                 }}
-            >
-                <div style={{
-                    height: 200,
+                style={{
+                    width: '100%',
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: 'column',
                     justifyContent: 'center',
+                    alignItems: 'stretch',
+                }}
+            >
+                <div style={{ 
+                    width: '100%', 
+                    height: 200, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
                     flexDirection: 'column',
                     padding: 20,
-                    width: '100%',
-                }}
-                >
-                    <span>
+                }}>
+                    <span style={{
+                        textAlign: 'center',
+                        fontSize: 16,
+                        color: '#888',
+                        marginBottom: 10,
+                        maxWidth: '100%',
+                        overflowWrap: 'break-word',
+                        wordBreak: 'break-word',
+                        whiteSpace: 'normal',
+                    }}>
                         Haz clic o arrastra archivos a esta área para subirlos. Maximos archivos a la vez 10
                     </span>
                     <Button appearance="primary" style={{ marginTop: 10 }}>

@@ -25,7 +25,6 @@ router.get("/get-all", async (req: Request, res: Response) => {
       return FileModel.find({ eventId: eventId }).exec();
     });
 
-    // add in each file the server url in fileName
     files.forEach(file => {
       file.fileName = `${req.protocol}://${req.get('host')}/images/${file.fileName}`;
     });
@@ -63,7 +62,8 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
   const uploadResults: { fileName: string; success: boolean; dbId?: string }[] = [];
 
   for (const file of files["file"]) {
-    const localPath = `${eventId}/${userName}-${Date.now()}-${file.originalname}`
+    const extension = path.extname(file.originalname);
+    const localPath = `${eventId}/${userName}-${Date.now()}${extension}`
     const filePath = `${folder}${localPath}`;
     const fileSaved = saveFile(filePath, file.buffer);
 

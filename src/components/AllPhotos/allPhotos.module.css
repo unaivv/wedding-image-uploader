@@ -1,0 +1,5 @@
+.allPhotosConatiner{
+     img {
+        object-fit: cover;
+     }
+}
