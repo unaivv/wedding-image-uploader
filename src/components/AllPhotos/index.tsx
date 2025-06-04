@@ -6,7 +6,7 @@ import "react-photo-album/rows.css";
 import "yet-another-react-lightbox/styles.css";
 import Lightbox from "yet-another-react-lightbox";
 
-import styles from './AllPhotos.module.css';
+import styles from './allPhotos.module.css';
 
 const AllPhotos = () => {
 
