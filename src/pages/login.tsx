@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, Navigate, Outlet } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { auth } from "../utils/auth";
 

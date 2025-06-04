@@ -2,7 +2,7 @@ import './App.css'
 import './index.css'
 import 'rsuite/dist/rsuite-no-reset.min.css';
 import { CustomProvider } from 'rsuite';
-import { BrowserRouter, Route, Routes, Outlet, Navigate } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Home from './pages/home';
 import UploadPage from './pages/upload';
 import Login from './pages/login';
