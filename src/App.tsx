@@ -22,7 +22,7 @@ function App() {
             </Routes>
           </CustomProvider>
         </BrowserRouter>
-      </GoogleOAuthProvider>;
+      </GoogleOAuthProvider>
     </>
   )
 }
