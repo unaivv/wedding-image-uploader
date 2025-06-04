@@ -9,13 +9,32 @@ const router = Router();
 
 const folder = path.join(__dirname, '../buckets/images/');
 router.get("/get-all", async (req: Request, res: Response) => {
-  res.json({
-    message: "List of users",
-    users: [
-      { id: 1, name: "John Doe" },
-      { id: 2, name: "Jane Smith" }
-    ]
-  });
+  const params = req.query;
+
+  if (!params) {
+    res.status(400).json({ error: "Request params is required" });
+    return;
+  }
+  const { eventId } = params;
+  if (!eventId) {
+    res.status(400).json({ error: "Missing required field: eventId" });
+    return;
+  }
+  try {
+    const files = await useDatabase<IFile[]>(async () => {
+      return FileModel.find({ eventId: eventId }).exec();
+    });
+
+    // add in each file the server url in fileName
+    files.forEach(file => {
+      file.fileName = `${req.protocol}://${req.get('host')}/images/${file.fileName}`;
+    });
+
+    res.json(files);
+  } catch (error) {
+    console.error("Error fetching files:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 const upload = multer({ storage: multer.memoryStorage() });

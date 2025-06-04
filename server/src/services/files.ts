@@ -1,4 +1,3 @@
-//create util to save in local folder files
 import fs from 'fs';
 import path from 'path';
 
