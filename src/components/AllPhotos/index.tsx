@@ -19,8 +19,8 @@ const AllPhotos = () => {
     useEffect(() => {
         setPhotos(undefined);
         const user = auth.getUser()
-        if (auth.isLoggedIn() && user) {        
-            getAllPhotos('683ef05ad8795795535d3b4f', 
+        if (auth.isLoggedIn() && user) {
+            getAllPhotos('683ef05ad8795795535d3b4f',
                 seeAllFotos === 'true' ? undefined : user
             )
                 .then((data) => {
@@ -60,21 +60,25 @@ const AllPhotos = () => {
         }
 
         return <>
-            <select 
-                onChange={(e) => {
-                    setAllPhotos(e.target.value as 'true' | 'false');
+            <SelectPicker
+                data={[
+                    { label: 'Todas las fotos', value: 'true' },
+                    { label: 'Mis fotos', value: 'false' }
+                ]}
+                searchable={false}
+                style={{ width: '100%', marginBottom: 20, }}
+                placeholder="Todas las fotos o solo las tuyas?"
+                onChange={(value) => {
+                    setAllPhotos(value as 'true' | 'false');
                 }}
-            >
-                <option value={'true'}>Todas las fotos</option>
-                <option value={'false'}>Mis fotos</option>
-            </select>
+                value={seeAllFotos}
+            />
             <RowsPhotoAlbum
                 photos={photos}
                 targetRowHeight={150}
                 onClick={({ index: current }) => setIndex(current)}
                 padding={2.5}
             />
-
             <Lightbox
                 index={index}
                 slides={lightboxPhotos || []}
