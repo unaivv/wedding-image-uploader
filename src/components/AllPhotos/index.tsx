@@ -6,7 +6,7 @@ import "yet-another-react-lightbox/styles.css";
 import Lightbox from "yet-another-react-lightbox";
 import styles from './allPhotos.module.css';
 import { auth } from "../../utils/auth";
-import { SelectPicker } from "rsuite";
+import { Button, ButtonGroup, Loader, SelectPicker, Toggle } from "rsuite";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 
 const AllPhotos = () => {
@@ -49,7 +49,7 @@ const AllPhotos = () => {
 
     const renderPhotos = () => {
         if (photos === undefined) {
-            return <p>Cargando...</p>
+            return <Loader />
         }
 
         if (photos === null) {
@@ -61,20 +61,6 @@ const AllPhotos = () => {
         }
 
         return <>
-            <SelectPicker
-                data={[
-                    { label: 'Todas las fotos', value: 'true' },
-                    { label: 'Mis fotos', value: 'false' }
-                ]}
-                searchable={false}
-                style={{ width: '100%', marginBottom: 20, }}
-                placeholder="Todas las fotos o solo las tuyas?"
-                onChange={(value) => {
-                    setAllPhotos(value as 'true' | 'false');
-                }}
-                value={seeAllFotos}
-                cleanable={false}
-            />
             <RowsPhotoAlbum
                 photos={photos}
                 targetRowHeight={150}
@@ -98,6 +84,17 @@ const AllPhotos = () => {
 
     return (
         <div className={styles.allPhotosConatiner}>
+            <Toggle
+                size="lg"
+                checkedChildren="Todas"
+                unCheckedChildren="Mias"
+                defaultChecked 
+                checked={seeAllFotos === 'true'}
+                onChange={
+                    (value: boolean) => setAllPhotos(value ? 'true' : 'false')
+                }
+                style={{ marginBottom: 20 }} 
+            />
             {renderPhotos()}
         </div>
     );
