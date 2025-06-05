@@ -21,6 +21,9 @@ const Upload = () => {
                     justifyContent: 'center',
                     alignItems: 'stretch',
                 }}
+                headers={{
+                    "ngrok-skip-browser-warning": "69420",
+                }}
             >
                 <div style={{ 
                     width: '100%', 

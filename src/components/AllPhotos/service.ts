@@ -1,5 +1,9 @@
 export const getAllPhotos = async (eventId: string) => {
-    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/get-all?eventId=${eventId}`);
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/get-all?eventId=${eventId}`, {
+        headers: new Headers({
+            "ngrok-skip-browser-warning": "69420",
+        }),
+    });
 
     if (!response.ok) {
         throw new Error('Failed to fetch photos');
