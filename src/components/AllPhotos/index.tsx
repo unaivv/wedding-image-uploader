@@ -57,17 +57,6 @@ const AllPhotos = () => {
                 targetRowHeight={150}
                 onClick={({ index: current }) => setIndex(current)}
                 padding={2.5}
-                //add crossorigin="anonymous" to the images
-                componentsProps={{
-                    image: {
-                        style: {
-                            objectFit: 'cover',
-                            borderRadius: 5,
-                            cursor: 'pointer',
-                        },
-                        crossOrigin: 'anonymous', // This is important for the lightbox to work with images from different origins
-                    }
-                }}
             />
 
             <Lightbox

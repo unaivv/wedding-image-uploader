@@ -27,12 +27,17 @@ export const getFile = (filePath: string): Buffer | null => {
 }
 
 export const deleteFile = (filePath: string): boolean => {
-    if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log(`File deleted: ${filePath}`);
-        return true;
-    } else {
+    try{
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`File deleted: ${filePath}`);
+            return true;
+        }
+
         console.error(`File not found: ${filePath}`);
+        return false;
+    }catch (e:unknown) {
+        console.error(`Error deleting file at ${filePath}:`, e);
         return false;
     }
 }

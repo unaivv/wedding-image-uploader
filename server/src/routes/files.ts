@@ -1,9 +1,10 @@
 import { Router, Request, Response } from "express";
 import { useDatabase } from "../services/ddbb";
-import { saveFile } from "../services/files";
+import { deleteFile, saveFile } from "../services/files";
 import multer from "multer";
 import path from "path";
 import FileModel, { IFile } from "../models/file";
+import { uploadFileToCloudinary } from "../services/useCloudinary";
 
 const router = Router();
 
@@ -23,13 +24,6 @@ router.get("/get-all", async (req: Request, res: Response) => {
   try {
     const files = await useDatabase<IFile[]>(async () => {
       return FileModel.find({ eventId: eventId }).exec();
-    });
-
-    const host = req.get('host') ?? '';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-
-    files.forEach(file => {
-      file.fileName = `${protocol}://${req.get('host')}/images/${file.fileName}`;
     });
 
     res.json(files);
@@ -70,11 +64,21 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
     const filePath = `${folder}${localPath}`;
     const fileSaved = saveFile(filePath, file.buffer);
 
+    const cloudinaryImageUrl = await uploadFileToCloudinary(filePath, eventId)
+
+    if(!cloudinaryImageUrl){
+      console.error("Error uploading file to Cloudinary");
+      res.status(500).json({ error: "Failed to upload file to Cloudinary" });
+      return;
+    }
+
+    deleteFile(filePath)
+
     let dbId: string | undefined = undefined;
-    if (fileSaved) {
+    if (fileSaved && cloudinaryImageUrl) {
       try {
         const fileDoc = new FileModel({
-          fileName: localPath,
+          fileName: cloudinaryImageUrl,
           eventId: body.eventId,
         });
 
