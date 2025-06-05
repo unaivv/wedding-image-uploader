@@ -7,6 +7,7 @@ import Lightbox from "yet-another-react-lightbox";
 import styles from './allPhotos.module.css';
 import { auth } from "../../utils/auth";
 import { SelectPicker } from "rsuite";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
 
 const AllPhotos = () => {
 
@@ -85,7 +86,11 @@ const AllPhotos = () => {
                 slides={lightboxPhotos || []}
                 open={index >= 0}
                 close={() => setIndex(-1)}
-                //zoom={{ ref: zoomRef }
+                plugins={[Zoom]}
+                zoom={{
+                    maxZoomPixelRatio: 2,
+                    scrollToZoom: true,
+                }}
             />
         </>
     }
