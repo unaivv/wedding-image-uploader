@@ -6,6 +6,7 @@ import "yet-another-react-lightbox/styles.css";
 import Lightbox from "yet-another-react-lightbox";
 import styles from './allPhotos.module.css';
 import { auth } from "../../utils/auth";
+import { SelectPicker } from "rsuite";
 
 const AllPhotos = () => {
 
@@ -13,10 +14,15 @@ const AllPhotos = () => {
     const [lightboxPhotos, setLightboxPhotos] = useState<any[] | undefined | null>(undefined);
     const [index, setIndex] = useState(-1);
 
+    const [seeAllFotos, setAllPhotos] = useState<'true' | 'false'>('true');
+
     useEffect(() => {
+        setPhotos(undefined);
         const user = auth.getUser()
         if (auth.isLoggedIn() && user) {        
-            getAllPhotos('683ef05ad8795795535d3b4f', user)
+            getAllPhotos('683ef05ad8795795535d3b4f', 
+                seeAllFotos === 'true' ? undefined : user
+            )
                 .then((data) => {
                     setPhotos(data.map((photo: any) => ({
                         src: photo.fileName,
@@ -38,7 +44,7 @@ const AllPhotos = () => {
                     setLightboxPhotos(null);
                 });
         }
-    }, []);
+    }, [seeAllFotos]);
 
     const renderPhotos = () => {
         if (photos === undefined) {
@@ -54,6 +60,14 @@ const AllPhotos = () => {
         }
 
         return <>
+            <select 
+                onChange={(e) => {
+                    setAllPhotos(e.target.value as 'true' | 'false');
+                }}
+            >
+                <option value={'true'}>Todas las fotos</option>
+                <option value={'false'}>Mis fotos</option>
+            </select>
             <RowsPhotoAlbum
                 photos={photos}
                 targetRowHeight={150}
