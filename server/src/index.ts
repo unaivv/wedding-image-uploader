@@ -11,7 +11,15 @@ app.use(cors()) //TODO: delete this in production, only for development purposes
 
 app.use("/files", files);
 app.use('/event', event);
-app.use('/images', express.static(path.resolve(__dirname, 'buckets/images')));
+
+app.use('/images', express.static(
+  path.resolve(__dirname, 'buckets/images'),
+  {
+    setHeaders: (res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+  }
+));
 
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
