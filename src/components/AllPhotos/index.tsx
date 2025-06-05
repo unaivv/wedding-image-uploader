@@ -72,6 +72,7 @@ const AllPhotos = () => {
                     setAllPhotos(value as 'true' | 'false');
                 }}
                 value={seeAllFotos}
+                cleanable={false}
             />
             <RowsPhotoAlbum
                 photos={photos}
@@ -84,6 +85,7 @@ const AllPhotos = () => {
                 slides={lightboxPhotos || []}
                 open={index >= 0}
                 close={() => setIndex(-1)}
+                //zoom={{ ref: zoomRef }
             />
         </>
     }
