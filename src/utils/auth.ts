@@ -13,9 +13,9 @@ export const auth = {
     logout() {
         localStorage.removeItem(TOKEN_KEY);
     },
-    getUser() {
+    getUserEmail() {
         try{
-            const token = this.getToken()
+            const token = auth.getToken()
             if (!token) {
                 return null;
             }
@@ -24,5 +24,17 @@ export const auth = {
             console.error('Error parsing token:', e);
             return null;
         }
-    }
+    },
+    getUserName() {
+        try{
+            const token = auth.getToken()
+            if (!token) {
+                return null;
+            }
+            return JSON.parse(atob(token.split('.')[1])).given_name
+        }catch(e){
+            console.error('Error parsing token:', e);
+            return null;
+        }
+    },
 };

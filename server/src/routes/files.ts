@@ -46,9 +46,9 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
     return;
   }
 
-  const { eventId, userName } = body;
+  const { eventId, userName, userEmail } = body;
 
-  if (!eventId || !userName) {
+  if (!eventId || !userName || !userEmail) {
     res.status(400).json({ error: "Missing required fields: eventId or userName" });
     return;
   }
@@ -84,7 +84,8 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
         const fileDoc = new FileModel({
           fileName: cloudinaryImageUrl,
           eventId: body.eventId,
-          user: userName
+          userEmail: userEmail,
+          userName: userName,
         });
 
         const savedFile = await useDatabase<IFile>(async () => {

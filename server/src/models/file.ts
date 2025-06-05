@@ -5,7 +5,8 @@ export const fileSchema = new Schema(
         fileName: { type: String, required: true },
         eventId: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
         createdAt: { type: Date, default: Date.now },
-        user: { type: String, required: true }
+        userName: { type: String, required: true },
+        userEmail: { type: String, required: true }
     }, 
     {
         timestamps: true,

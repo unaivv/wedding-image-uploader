@@ -1,0 +1,25 @@
+.userNameWrapper{
+    display: flex;
+    margin-top: 5px;
+    &>div {
+        min-width: 20px;
+        margin-right: 5px;
+    }
+    & > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: calc(100% - 20px - 5px);
+        display: inline-block;
+        font-size: 0.9em;
+        color: var(--text-color);
+        font-weight: 500;
+        line-height: 1.2em;
+        word-break: break-all;
+        padding-right: 1em;
+        flex: 1;
+        text-align: left;
+        box-sizing: border-box;
+        transition: text-overflow 0.3s ease;
+    }
+}
