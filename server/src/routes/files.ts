@@ -25,8 +25,11 @@ router.get("/get-all", async (req: Request, res: Response) => {
       return FileModel.find({ eventId: eventId }).exec();
     });
 
+    const host = req.get('host') ?? '';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+
     files.forEach(file => {
-      file.fileName = `${req.protocol}://${req.get('host')}/images/${file.fileName}`;
+      file.fileName = `${protocol}://${req.get('host')}/images/${file.fileName}`;
     });
 
     res.json(files);

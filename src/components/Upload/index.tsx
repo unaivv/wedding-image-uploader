@@ -5,7 +5,7 @@ const Upload = () => {
         <div style={{
             width: '100%',}}>
             <Uploader
-                action="http://localhost:3000/files/upload"
+                action={`${import.meta.env.VITE_BACKEND_URL}/files/upload`}
                 draggable
                 accept="image/*"
                 multiple
