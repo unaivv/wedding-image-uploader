@@ -6,7 +6,7 @@ import "yet-another-react-lightbox/styles.css";
 import Lightbox from "yet-another-react-lightbox";
 import styles from './allPhotos.module.css';
 import { auth } from "../../utils/auth";
-import { Button, ButtonGroup, Loader, SelectPicker, Toggle } from "rsuite";
+import { Loader, Toggle } from "rsuite";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 
 const AllPhotos = () => {
