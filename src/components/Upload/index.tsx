@@ -1,6 +1,9 @@
 import { Button, Uploader } from 'rsuite';
+import { auth } from '../../utils/auth';
 
 const Upload = () => {
+    const user = auth.getUser();
+
     return (
         <div style={{
             width: '100%',}}>
@@ -12,7 +15,7 @@ const Upload = () => {
                 listType="picture"
                 data={{
                     eventId: '683ef05ad8795795535d3b4f',
-                    userName: 'victor',
+                    userName: user,
                 }}
                 style={{
                     width: '100%',

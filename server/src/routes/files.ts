@@ -16,14 +16,18 @@ router.get("/get-all", async (req: Request, res: Response) => {
     res.status(400).json({ error: "Request params is required" });
     return;
   }
-  const { eventId } = params;
+  const { eventId, user } = params;
   if (!eventId) {
     res.status(400).json({ error: "Missing required field: eventId" });
     return;
   }
   try {
     const files = await useDatabase<IFile[]>(async () => {
-      return FileModel.find({ eventId: eventId }).exec();
+      const filter:any = { eventId: eventId };
+      if (user) {
+        filter.user = user;
+      }
+      return FileModel.find(filter).exec();
     });
 
     res.json(files);
@@ -80,6 +84,7 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
         const fileDoc = new FileModel({
           fileName: cloudinaryImageUrl,
           eventId: body.eventId,
+          user: userName
         });
 
         const savedFile = await useDatabase<IFile>(async () => {

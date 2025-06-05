@@ -12,5 +12,17 @@ export const auth = {
     },
     logout() {
         localStorage.removeItem(TOKEN_KEY);
+    },
+    getUser() {
+        try{
+            const token = this.getToken()
+            if (!token) {
+                return null;
+            }
+            return JSON.parse(atob(token.split('.')[1])).email
+        }catch(e){
+            console.error('Error parsing token:', e);
+            return null;
+        }
     }
 };

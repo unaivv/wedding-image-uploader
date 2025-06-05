@@ -1,5 +1,5 @@
-export const getAllPhotos = async (eventId: string) => {
-    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/get-all?eventId=${eventId}`, {
+export const getAllPhotos = async (eventId: string, user: string) => {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/get-all?eventId=${eventId}&user=${user}`, {
         headers: new Headers({
             "ngrok-skip-browser-warning": "69420",
         }),
