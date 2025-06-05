@@ -27,7 +27,7 @@ router.get("/get-all", async (req: Request, res: Response) => {
       if (user) {
         filter.user = user;
       }
-      return FileModel.find(filter).exec();
+      return FileModel.find(filter).sort({ createdAt: -1 }).exec();
     });
 
     res.json(files);
