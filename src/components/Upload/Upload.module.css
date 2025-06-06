@@ -1,0 +1,32 @@
+.upload{
+    width: 100%;
+    & :global(.rs-uploader-file-item-btn-remove.rs-btn-close){
+        display: none;
+    }
+
+    .success{
+        width: 100%;
+        height: 100%;
+        background-color: rgb(149, 255, 154);
+        opacity: 0.5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .remove{
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 20px;
+        height: 20px;
+        color: black;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        background-color: rgb(180, 180, 180);
+        line-height: 14px;
+    }
+}

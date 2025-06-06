@@ -2,4 +2,7 @@
      img {
         object-fit: cover;
      }
+     button:focus{
+         outline: none !important;
+     }
 }

@@ -4,11 +4,12 @@ import { deleteFile, saveFile } from "../services/files";
 import multer from "multer";
 import path from "path";
 import FileModel, { IFile } from "../models/file";
-import { uploadFileToCloudinary } from "../services/useCloudinary";
+import { deleteFileFromCloudinary, uploadFileToCloudinary } from "../services/useCloudinary";
 
 const router = Router();
-
 const folder = path.join(__dirname, '../buckets/images/');
+const upload = multer({ storage: multer.memoryStorage() });
+
 router.get("/get-all", async (req: Request, res: Response) => {
   const params = req.query;
 
@@ -36,8 +37,6 @@ router.get("/get-all", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
-const upload = multer({ storage: multer.memoryStorage() });
 
 router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (req: Request, res: Response): Promise<void> => {
   const body = req.body;
@@ -114,5 +113,50 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
 
   res.json({ message: "Files uploaded successfully", files: uploadResults });
 });
+
+router.get("/delete", async (req: Request, res: Response) => {
+  const params = req.query;
+
+  if (!params) {
+    res.status(400).json({ error: "Request params is required" });
+    return;
+  }
+  const { fileId } = params;
+  if (!fileId) {
+    res.status(400).json({ error: "Missing required field: fileId" });
+    return;
+  }
+
+  try {
+    const file = await useDatabase<IFile | null>(async () => {
+      return FileModel.findById(fileId).exec();
+    });
+
+    if (!file) {
+      res.status(404).json({ error: "File not found" });
+      return;
+    }
+    const cloudinaryId = file.fileName.split('/').pop()?.split('.')[0];
+    if (!cloudinaryId) {
+      res.status(400).json({ error: "Invalid file name format" });
+      return;
+    }
+
+    const deletedFIleInCloudinary = deleteFileFromCloudinary(cloudinaryId);
+    if (!deletedFIleInCloudinary) {
+      res.status(500).json({ error: "Failed to delete file from Cloudinary" });
+      return;
+    }
+
+    await useDatabase(async () => {
+      await FileModel.deleteOne({ _id: fileId }).exec();
+    });
+
+    res.json({ message: "File deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+})
 
 export default router;

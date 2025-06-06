@@ -4,7 +4,8 @@ export interface IPhoto {
     height: number
     id: string
     alt: string
-    user?: string
+    userName?: string
+    userEmail?: string
 }
 
 export interface IPhotosFromBackend {
@@ -12,6 +13,8 @@ export interface IPhotosFromBackend {
     eventId: string
     fileName: string
     updatedAt: string
-    user: string
+    userName: string
+    userEmail?: string
+    user?: string
     id: string
 }

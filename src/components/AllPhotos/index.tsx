@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getAllPhotos } from "./service";
 import { RowsPhotoAlbum } from "react-photo-album";
 import "react-photo-album/rows.css";
@@ -19,7 +19,9 @@ const AllPhotos = () => {
 
     const [seeAllFotos, setAllPhotos] = useState<'true' | 'false'>('true');
 
-    useEffect(() => {
+    const handleGetAllPhotos = useCallback(() => {
+        if(photos !== undefined) return;
+
         setPhotos(undefined);
         const userEmail = auth.getUserEmail()
         if (auth.isLoggedIn() && userEmail) {
@@ -33,7 +35,8 @@ const AllPhotos = () => {
                         height: 200,
                         id: photo.id,
                         alt: photo.fileName,
-                        user: photo.user
+                        userName: photo.userName || photo.userEmail || photo?.user?.split('@')[0],
+                        userEmail: photo.userEmail
                     })));
                     setLightboxPhotos(data.map((photo: IPhotosFromBackend):IPhoto => ({
                         src: photo.fileName,
@@ -41,7 +44,7 @@ const AllPhotos = () => {
                         height: 1500,
                         id: photo.id,
                         alt: photo.fileName,
-                        user: photo.user
+                        userName: photo.userName || photo.userEmail || photo?.user?.split('@')[0]
                     })));
                 })
                 .catch(() => {
@@ -51,9 +54,25 @@ const AllPhotos = () => {
         }
     }, [seeAllFotos]);
 
+    useEffect(() => {
+        handleGetAllPhotos();
+    }, [handleGetAllPhotos]);
+
+    const deleteLocalPhotos = (photoId:string) => {
+        setPhotos((prevPhotos) => {
+            if (!prevPhotos) return prevPhotos;
+            return prevPhotos.filter(photo => photo.id !== photoId);
+        });
+        setLightboxPhotos((prevLightboxPhotos) => {
+            if (!prevLightboxPhotos) return prevLightboxPhotos;
+            return prevLightboxPhotos.filter(photo => photo.id !== photoId);
+        });
+        setIndex(-1);
+    }
+
     const renderPhotos = () => {
         if (photos === undefined) {
-            return <Loader />
+            return <Loader size="lg" style={{marginTop: '2em'}} />
         }
 
         if (photos === null) {
@@ -64,13 +83,20 @@ const AllPhotos = () => {
             return <p>No hay fotos</p>
         }
 
-        return <>
+        return (<>
             <RowsPhotoAlbum
                 photos={photos}
                 targetRowHeight={150}
                 onClick={({ index: current }) => setIndex(current)}
                 padding={2.5}
-                render={{ image: Photo }}
+                render={{
+                    image: (props, context) =>
+                        Photo(
+                            props,
+                            context,
+                            deleteLocalPhotos
+                        )
+                }}
             />
             <Lightbox
                 index={index}
@@ -83,7 +109,7 @@ const AllPhotos = () => {
                     scrollToZoom: true,
                 }}
             />
-        </>
+        </>)
     }
 
 
@@ -99,7 +125,9 @@ const AllPhotos = () => {
                 }
                 style={{ marginBottom: 20 }} 
             />
-            {renderPhotos()}
+            <div>
+                {renderPhotos()}
+            </div>
         </div>
     );
 }

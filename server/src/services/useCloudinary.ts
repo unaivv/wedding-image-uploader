@@ -18,3 +18,18 @@ export const uploadFileToCloudinary = async (filePath: string, folder = ''): Pro
         return false;
     }
 }
+
+export const deleteFileFromCloudinary = async (publicId: string): Promise<boolean> => {
+    cloudinary.config({
+        cloud_name: 'dbid6no6r',
+        api_key: '875931171629178',
+        api_secret: process.env.CLOUDINARY_API_SECRET
+    });
+    try {
+        const result = await cloudinary.uploader.destroy(publicId);
+        return result.result === 'ok';
+    } catch (error) {
+        console.error('Error deleting file from Cloudinary:', error);
+        return false;
+    }
+}
