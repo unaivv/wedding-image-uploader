@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import type { FileType, UploaderInstance } from 'rsuite/esm/Uploader/Uploader';
 import styles from './Upload.module.css';
 import CloseIcon from '@rsuite/icons/Close';
+import CheckRoundIcon from '@rsuite/icons/CheckRound';
 
 const Upload = () => {
     const userEmail = auth.getUserEmail();
@@ -15,7 +16,7 @@ const Upload = () => {
     const [files, setFiles] = useState<FileType[]>([]);
 
     return (
-        <div  className={styles.upload}>
+        <div className={styles.upload}>
             <Button
                 appearance="primary"
                 style={{ marginTop: 20, width: '100%' }}
@@ -56,18 +57,23 @@ const Upload = () => {
                         <>
                             {
                                 file.status === "finished" && <div className={styles.success}>
-                                    Subido!
+                                    <CheckRoundIcon fontSize={'2em'} color='#000' />
                                 </div>
                             }
-                            <span 
-                                className={styles.remove}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setFiles((prevFiles) => {
-                                        return prevFiles.filter((f) => f.fileKey !== file.fileKey);
-                                    });
-                                }}
-                            ><CloseIcon fontSize={'0.7em'} /></span>
+                            {
+                                file.status !== "finished" &&
+                                <span
+                                    className={styles.remove}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFiles((prevFiles) => {
+                                            return prevFiles.filter((f) => f.fileKey !== file.fileKey);
+                                        });
+                                    }}
+                                >
+                                    <CloseIcon fontSize={'0.7em'} />
+                                </span>
+                            }
                             <img
                                 src={
                                     file?.blobFile
