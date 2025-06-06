@@ -20,8 +20,6 @@ const AllPhotos = () => {
     const [seeAllFotos, setAllPhotos] = useState<'true' | 'false'>('true');
 
     const handleGetAllPhotos = useCallback(() => {
-        if(photos !== undefined) return;
-
         setPhotos(undefined);
         const userEmail = auth.getUserEmail()
         if (auth.isLoggedIn() && userEmail) {
@@ -35,7 +33,7 @@ const AllPhotos = () => {
                         height: 200,
                         id: photo.id,
                         alt: photo.fileName,
-                        userName: photo.userName || photo.userEmail || photo?.user?.split('@')[0],
+                        userName: photo.userName || photo.userEmail || photo?.user,
                         userEmail: photo.userEmail
                     })));
                     setLightboxPhotos(data.map((photo: IPhotosFromBackend):IPhoto => ({

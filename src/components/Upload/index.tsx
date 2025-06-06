@@ -52,7 +52,6 @@ const Upload = () => {
                 }}
                 autoUpload={false}
                 renderThumbnail={(file) => {
-                    console.log(file)
                     return (
                         <>
                             {
@@ -94,7 +93,6 @@ const Upload = () => {
                 }}
                 onSuccess={(response, file) => {
                     setLoading(false);
-                    console.log({response, file})
                     if (response && response.fileName) {
                         setFiles((prevFiles) => {
                             return prevFiles.map((f) => {
@@ -106,8 +104,7 @@ const Upload = () => {
                         });
                     }
                 }}
-                onUpload={(file) => {
-                    console.log({file})
+                onUpload={() => {
                     setLoading(true);
                 }}
                 fileList={files}

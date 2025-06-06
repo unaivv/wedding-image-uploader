@@ -24,11 +24,19 @@ router.get("/get-all", async (req: Request, res: Response) => {
   }
   try {
     const files = await useDatabase<IFile[]>(async () => {
-      const filter:any = { eventId: eventId };
       if (user) {
-        filter.user = user;
+        return FileModel.find({
+          $or: [
+            { name: user },
+            { userEmail: user },
+            { userName: user }
+          ],
+          $and: [
+            { eventId: eventId },
+          ]
+        }).sort({ createdAt: -1 }).exec();
       }
-      return FileModel.find(filter).sort({ createdAt: -1 }).exec();
+      return FileModel.find({ eventId: eventId }).sort({ createdAt: -1 }).exec();
     });
 
     res.json(files);

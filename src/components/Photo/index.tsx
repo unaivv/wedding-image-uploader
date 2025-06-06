@@ -19,8 +19,8 @@ const Photo = (
 
   const email = (photo as IPhoto).userEmail || (photo as IPhoto).userName;
   const userName = (photo as IPhoto).userName || (photo as IPhoto).userEmail || 'User'
-
   const canDelete = email === auth.getUserEmail();
+
   const handleDelete = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
     e.stopPropagation();
     if(loading || !canDelete) return;
@@ -88,7 +88,7 @@ const Photo = (
             userName.charAt(0)?.toUpperCase()
           }
         </Avatar>
-        <span>{userName}</span>
+        <span>{userName?.split('@')[0]}</span>
       </div>
     </div>
   );
