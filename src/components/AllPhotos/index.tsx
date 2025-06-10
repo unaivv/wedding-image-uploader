@@ -34,7 +34,8 @@ const AllPhotos = () => {
                         id: photo.id,
                         alt: '',
                         userName: photo.userId.name || photo.userId.email.split('@')[0],
-                        userEmail: photo.userId.email
+                        userEmail: photo.userId.email,
+                        userId: photo.userId._id,
                     })));
                     setLightboxPhotos(data.map((photo: IPhotosFromBackend):IPhoto => ({
                         src: photo.fullSrc,
@@ -43,6 +44,7 @@ const AllPhotos = () => {
                         id: photo.id,
                         alt: photo.fullSrc,
                         userName: photo.userId.name || photo.userId.email.split('@')[0],
+                        userId: photo.userId._id,
                     })));
                 })
                 .catch(() => {

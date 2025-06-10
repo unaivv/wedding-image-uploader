@@ -44,7 +44,11 @@ export const auth = {
         return localStorage.getItem('user_id');
     },
     async login(token: string) {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/login?token=${token}`);
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/login?token=${token}`,{
+            headers:{
+                "ngrok-skip-browser-warning": "69420", //TODO: ONLY FOR DEV
+            }
+        });
         if(!response.ok) {
             console.error('Login failed:', response.statusText);
             return false

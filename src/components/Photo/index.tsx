@@ -17,9 +17,8 @@ const Photo = (
 
   const [loading, setLoading] = useState<boolean>(false);
 
-  const email = (photo as IPhoto).userEmail || (photo as IPhoto).userName;
   const userName = (photo as IPhoto).userName || (photo as IPhoto).userEmail || 'User'
-  const canDelete = email === auth.getUserEmail();
+  const canDelete = auth.getUserId() === (photo as IPhoto).userId
 
   const handleDelete = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
     e.stopPropagation();
@@ -31,7 +30,7 @@ const Photo = (
           deleteLocalPhotos((photo as IPhoto).id || "");
           return true
         } 
-        console.error("Failed to delete file");
+        console.error("Failed to delete file"); 
         return false;
       })
       .catch((error) => {

@@ -16,6 +16,7 @@ export interface IPhoto {
     alt: string
     userName?: string
     userEmail?: string
+    userId: string
 }
 
 export interface IPhotosFromBackend {
