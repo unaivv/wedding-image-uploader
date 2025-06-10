@@ -59,7 +59,7 @@ const ChallengesPage: React.FC = () => {
     return (
         <div className={styles.container}>
             <h2>Retos fotográficos</h2>
-            <p>
+            <p className={styles.description}>
                 Participa en nuestros retos fotográficos. Cada reto cuenta con un tema específico. Sube tus fotos y participa para ganar premios.
             </p>
             <div className={styles.sliderWrapper}>
@@ -77,7 +77,7 @@ const ChallengesPage: React.FC = () => {
                             <p>
                                 <strong>Quedan</strong> {renderCountdown(challenge.deadline, now)}
                             </p>
-                            <Button className={styles.uploadButton}>Upload Photo</Button>
+                            <Button appearance="ghost">Upload Photo</Button>
                         </div>
                     ))}
                 </div>

@@ -2,6 +2,12 @@
     max-width: 800px;
     margin: 0 auto;
     margin-bottom: 40px;
+
+    h2{
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 1.5em;
+    }
 }
 
 .sliderWrapper {
@@ -20,6 +26,13 @@
     width: calc(100% + 4rem);
     margin-left: -2rem;
     padding-left: 2rem;
+}
+
+.description{
+    color: #b8b8b8;
+    font-size: 0.9em;
+    margin-bottom: 0.5em;
+    margin-top: 0;
 }
 
 .challengeCard {
