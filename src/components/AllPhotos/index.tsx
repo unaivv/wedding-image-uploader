@@ -114,11 +114,12 @@ const AllPhotos = () => {
                 index={index}
                 slides={
                     [...(lightboxPhotos || [])].sort((a, b) => {
-                        if (orderByLikes) {
+                        if (!orderByLikes) {
                             return new Date(b.id).getTime() - new Date(a.id).getTime();
                         }
                         return b.likedBy.length - a.likedBy.length;
-                    }) || []}
+                    })
+                }
                 open={index >= 0}
                 close={() => setIndex(-1)}
                 plugins={[Zoom]}
