@@ -38,8 +38,7 @@ const Upload = () => {
                 listType="picture"
                 data={{
                     eventId: '683ef05ad8795795535d3b4f',
-                    userEmail: userEmail,
-                    userName: userName
+                    userId: auth.getUserId(),
                 }}
                 style={{
                     width: '100%',

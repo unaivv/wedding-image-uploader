@@ -2,11 +2,12 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export const fileSchema = new Schema(
     {
-        fileName: { type: String, required: true },
+        fullSrc: { type: String, required: true },
+        compressedSrc: { type: String, required: true },
         eventId: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
+        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
         createdAt: { type: Date, default: Date.now },
-        userName: { type: String, required: true },
-        userEmail: { type: String, required: true }
+        updatedAt: { type: Date, default: Date.now }
     }, 
     {
         timestamps: true,

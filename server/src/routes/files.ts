@@ -5,6 +5,7 @@ import multer from "multer";
 import path from "path";
 import FileModel, { IFile } from "../models/file";
 import { deleteFileFromCloudinary, uploadFileToCloudinary } from "../services/useCloudinary";
+import { compressImage, convertToWebp } from "../services/images";
 
 const router = Router();
 const folder = path.join(__dirname, '../buckets/images/');
@@ -53,10 +54,10 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
     return;
   }
 
-  const { eventId, userName, userEmail } = body;
+  const { eventId, userId } = body;
 
-  if (!eventId || !userName || !userEmail) {
-    res.status(400).json({ error: "Missing required fields: eventId or userName" });
+  if (!eventId || !userId) {
+    res.status(400).json({ error: "Missing required fields: eventId or userId" });
     return;
   }
 
@@ -71,28 +72,54 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
 
   for (const file of files["file"]) {
     const extension = path.extname(file.originalname);
-    const localPath = `${eventId}/${userName}-${Date.now()}${extension}`
+    const localPath = `${eventId}/${userId}-${Date.now()}${extension}`
     const filePath = `${folder}${localPath}`;
     const fileSaved = saveFile(filePath, file.buffer);
 
-    const cloudinaryImageUrl = await uploadFileToCloudinary(filePath, eventId)
+    const webpImage = await convertToWebp(filePath);
 
-    if(!cloudinaryImageUrl){
+    if (!webpImage) {
+      console.error("Error converting image to WebP");
+      res.status(500).json({ error: "Failed to convert image to WebP" });
+      return;
+    }
+
+    const cloudinaryFullImageUrl = await uploadFileToCloudinary(webpImage, eventId)
+
+    if(!cloudinaryFullImageUrl){
       console.error("Error uploading file to Cloudinary");
       res.status(500).json({ error: "Failed to upload file to Cloudinary" });
       return;
     }
 
+    const imageCompressed = await compressImage(filePath)
+    
+    if (!imageCompressed) {
+      console.error("Error compressing image");
+      res.status(500).json({ error: "Failed to compress image" });
+      return;
+    }
+
+    const cloudinaryCompressedImageUrl = await uploadFileToCloudinary(imageCompressed, eventId)
+
+    if (!cloudinaryCompressedImageUrl) {
+      console.error("Error uploading compressed image to Cloudinary");
+      res.status(500).json({ error: "Failed to upload compressed image to Cloudinary" });
+      return;
+    }
+
     deleteFile(filePath)
+    deleteFile(imageCompressed)
+    deleteFile(webpImage)
 
     let dbId: string | undefined = undefined;
-    if (fileSaved && cloudinaryImageUrl) {
+    if (fileSaved && cloudinaryFullImageUrl) {
       try {
         const fileDoc = new FileModel({
-          fileName: cloudinaryImageUrl,
+          fullSrc: cloudinaryFullImageUrl,
+          compressedSrc: cloudinaryCompressedImageUrl,
           eventId: body.eventId,
-          userEmail: userEmail,
-          userName: userName,
+          userId: body.userId
         });
 
         const savedFile = await useDatabase<IFile>(async () => {

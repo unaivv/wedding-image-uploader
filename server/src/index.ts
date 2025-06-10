@@ -1,6 +1,7 @@
 import express from "express";
 import files from "./routes/files";
-import event from "./routes/event";
+import events from "./routes/event";
+import users from "./routes/user";
 import path from "path";
 import cors from "cors"; //TODO: delete this in production, only for development purposes
 import 'dotenv/config'
@@ -11,7 +12,8 @@ const port = "3000";
 app.use(cors()) //TODO: delete this in production, only for development purposes
 
 app.use("/files", files);
-app.use('/event', event);
+app.use('/event', events);
+app.use('/user', users)
 
 app.use('/images', express.static(path.resolve(__dirname, 'buckets/images')));
 

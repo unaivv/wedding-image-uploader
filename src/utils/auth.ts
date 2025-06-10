@@ -37,4 +37,26 @@ export const auth = {
             return null;
         }
     },
+    setUserId(userId: string) {
+        localStorage.setItem('user_id', userId);
+    },
+    getUserId(): string | null {
+        return localStorage.getItem('user_id');
+    },
+    async login(token: string) {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/login?token=${token}`);
+        if(!response.ok) {
+            console.error('Login failed:', response.statusText);
+            return false
+        }
+
+        const data = await response.json();
+        if (data.error) {
+            console.error('Login error:', data.error);
+            return false;
+        }
+        auth.setUserId(data._id);
+        auth.saveToken(token);
+        return true;
+    }
 };

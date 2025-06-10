@@ -11,7 +11,8 @@ export interface IPhoto {
 export interface IPhotosFromBackend {
     createdAt: string
     eventId: string
-    fileName: string
+    compressedSrc: string
+    fullSrc: string
     updatedAt: string
     userName: string
     userEmail?: string

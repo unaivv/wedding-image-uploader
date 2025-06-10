@@ -15,10 +15,14 @@ const Login = () => {
     return <>
         <h1>Inicia sesión con google:</h1>
         <GoogleLogin
-            onSuccess={(credentialResponse) => {
+            onSuccess={async (credentialResponse) => {
                 if (credentialResponse.credential) {
-                    auth.saveToken(credentialResponse.credential);
-                    navigate("/");
+                    const result = await auth.login(credentialResponse.credential)
+                    if(result) {
+                        navigate("/");
+                        return
+                    }
+                    alert("Error al iniciar sesión, por favor inténtalo de nuevo.");
                 }
             }}
             onError={() => {

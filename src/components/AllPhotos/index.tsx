@@ -28,20 +28,20 @@ const AllPhotos = () => {
             )
                 .then((data: IPhotosFromBackend[]) => {
                     setPhotos(data.map((photo: IPhotosFromBackend):IPhoto => ({
-                        src: photo.fileName,
+                        src: photo.compressedSrc,
                         width: 200,
                         height: 200,
                         id: photo.id,
-                        alt: photo.fileName,
+                        alt: '',
                         userName: photo.userName || photo.userEmail || photo?.user,
                         userEmail: photo.userEmail
                     })));
                     setLightboxPhotos(data.map((photo: IPhotosFromBackend):IPhoto => ({
-                        src: photo.fileName,
+                        src: photo.fullSrc,
                         width: 1500,
                         height: 1500,
                         id: photo.id,
-                        alt: photo.fileName,
+                        alt: photo.fullSrc,
                         userName: photo.userName || photo.userEmail || photo?.user?.split('@')[0]
                     })));
                 })
