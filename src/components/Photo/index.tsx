@@ -151,9 +151,13 @@ const Photo = (
             setShowLikes(false)
           }}
           size="xs"
-          backdrop="static"
+          backdrop={true}
           className={styles.likesModal}
           onClick={(e) => e.stopPropagation()}
+          onBackdropClick={(e) => {
+            e.stopPropagation();
+            setShowLikes(false);
+          }}
         >
           <Modal.Header onClick={(e) => e.stopPropagation()}>
             <Modal.Title onClick={(e) => e.stopPropagation()}>Le gusta a:</Modal.Title>
