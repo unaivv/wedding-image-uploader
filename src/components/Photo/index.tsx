@@ -19,6 +19,7 @@ const Photo = (
 
   const userName = (photo as IPhoto).userName || (photo as IPhoto).userEmail || 'User'
   const canDelete = auth.getUserId() === (photo as IPhoto).userId
+  console.log(auth.getUserId(), (photo as IPhoto).userId)
 
   const handleDelete = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
     e.stopPropagation();

@@ -23,6 +23,12 @@ router.get("/login", async (req: Request, res: Response): Promise<void> => {
     const { picture, email, name, given_name } = decodedToken;
 
     try {
+        const existingUser = await useDatabase(() => UserModel.findOne({ email: email.toString() }).exec());
+        if (existingUser) {
+            res.status(200).json(existingUser);
+            return;
+        }
+
         const user = await useDatabase(() => {
             const user = new UserModel({
                 picture: picture || "",
