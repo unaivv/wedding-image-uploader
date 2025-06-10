@@ -34,6 +34,7 @@ router.get("/get-all", async (req: Request, res: Response) => {
       return FileModel.find(filters)
         .sort({ createdAt: -1 })
         .populate('userId')
+        .populate('likedBy')
         .exec();
     });
 

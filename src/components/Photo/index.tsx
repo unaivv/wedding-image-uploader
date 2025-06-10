@@ -1,8 +1,6 @@
-
-
 import { type RenderImageContext, type RenderImageProps } from "react-photo-album";
 import { Image, Loader } from "rsuite";
-import type { IPhoto } from "../AllPhotos/types";
+import type { IPhoto, IUser } from "../AllPhotos/types";
 import styles from "./Photo.module.css";
 import CloseIcon from '@rsuite/icons/Close';
 import { deleteFile, likeFile } from "../Upload/service";
@@ -14,13 +12,25 @@ const Photo = (
   { photo, width, height }: RenderImageContext,
   deleteLocalPhotos: (photoId: string) => void
 ) => {
-
   const [loading, setLoading] = useState<boolean>(false);
+  const [showLikes, setShowLikes] = useState(false); // Nuevo estado
 
   const userName = (photo as IPhoto).user.name || (photo as IPhoto).user.email || 'User'
   const canDelete = auth.getUserId() === (photo as IPhoto).user._id
 
-  const [liked, setLiked] = useState<boolean>((photo as IPhoto).likedBy?.includes(auth.getUserId() || ""));
+  const [liked, setLiked] = useState<boolean>(
+    ((photo as IPhoto).likedBy || [])
+      .some((user) => (typeof user === "object" ? user._id : user) === (auth.getUserId() || ""))
+  );
+
+  const likedUsers = ((photo as IPhoto).likedBy || []).map(
+    (user) => {
+      if (typeof user === "object") {
+        return user.fullName || user.name || user.email || 'User';
+      }
+      return user;
+    }
+  );
 
   const handleDelete = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
     e.stopPropagation();
@@ -51,10 +61,16 @@ const Photo = (
         if (liked) {
           const userId = auth.getUserId();
           if (userId) {
-            (photo as IPhoto).likedBy = [...((photo as IPhoto).likedBy || []), userId];
+            (photo as IPhoto).likedBy = [
+              ...((photo as IPhoto).likedBy || []),
+              { _id: userId } as IUser
+            ];
           }
         } else {
-          (photo as IPhoto).likedBy = (photo as IPhoto).likedBy?.filter(id => id !== auth.getUserId());
+          (photo as IPhoto).likedBy = (photo as IPhoto).likedBy?.filter(user => {
+            const userId = typeof user === "object" ? user._id : user;
+            return userId !== auth.getUserId();
+          });
         }
       })
       .catch((error) => {
@@ -104,17 +120,27 @@ const Photo = (
               src={(photo as IPhoto).user.picture}
               alt={userName}
               circle
-              style={{ width: '20px', height: '20px'}} 
+              style={{ width: '20px', height: '20px' }}
             />
           </div>
           <span>{userName?.split('@')[0]}</span>
         </div>
-        <div className={styles.actions}>
+        <div className={styles.actions} style={{ position: "relative" }}>
           <span
             className={`${styles.likeButton} ${liked ? styles.liked : ''}`}
             onClick={handleLike}
+            onMouseEnter={() => setShowLikes(true)}
+            onMouseLeave={() => setShowLikes(false)}
           >
             {liked ? '❤️' : '🤍'} {((photo as IPhoto).likedBy || []).length}
+            {showLikes && likedUsers.length > 0 && (
+              <div className={styles.likesTooltip}>
+                <span>Le gusta a:</span>
+                {likedUsers.map((name, idx) => (
+                  <div key={idx}>{name}</div>
+                ))}
+              </div>
+            )}
           </span>
         </div>
       </div>
