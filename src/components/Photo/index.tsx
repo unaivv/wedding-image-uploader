@@ -120,7 +120,7 @@ const Photo = (
             onClick={handleDelete}
             className={styles.removeButton}
           >
-            <CloseIcon fontSize={'1em'} />
+            <CloseIcon fontSize={'1em'} color="white" />
           </span>
         )
       }
