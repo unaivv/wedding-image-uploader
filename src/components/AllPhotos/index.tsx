@@ -90,7 +90,7 @@ const AllPhotos = () => {
         return (<>
             <RowsPhotoAlbum
                 photos={
-                    photos.sort((a, b) => {
+                    [...photos].sort((a, b) => {
                         if (!orderByLikes) {
                             return new Date(b.id).getTime() - new Date(a.id).getTime();
                         }
@@ -111,12 +111,13 @@ const AllPhotos = () => {
             />
             <Lightbox
                 index={index}
-                slides={lightboxPhotos?.sort((a, b) => {
-                    if (orderByLikes) {
-                        return new Date(b.id).getTime() - new Date(a.id).getTime();
-                    }
-                    return b.likedBy.length - a.likedBy.length;
-                }) || []}
+                slides={
+                    [...(lightboxPhotos || [])].sort((a, b) => {
+                        if (orderByLikes) {
+                            return new Date(b.id).getTime() - new Date(a.id).getTime();
+                        }
+                        return b.likedBy.length - a.likedBy.length;
+                    }) || []}
                 open={index >= 0}
                 close={() => setIndex(-1)}
                 plugins={[Zoom]}
