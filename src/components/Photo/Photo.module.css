@@ -81,3 +81,11 @@
     font-size: 0.9em;
     text-align: left;
 }
+
+.likeUser{
+    color: white
+}
+
+:global(.rs-modal-title){
+    line-height: 1.5em !important;
+}

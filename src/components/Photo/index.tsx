@@ -155,13 +155,15 @@ const Photo = (
           className={styles.likesModal}
           onClick={(e) => e.stopPropagation()}
         >
-          <Modal.Header>
-            <Modal.Title><h3>Le gusta a:</h3></Modal.Title>
+          <Modal.Header onClick={(e) => e.stopPropagation()}>
+            <Modal.Title onClick={(e) => e.stopPropagation()}>Le gusta a:</Modal.Title>
           </Modal.Header>
-          <Modal.Body>
+          <Modal.Body
+          onClick={(e) => e.stopPropagation()}
+          >
             {likedUsers.length > 0 ? (
               likedUsers.map((name, idx) => (
-                <div key={idx} className={styles.likeUser}>
+                <div key={idx} className={styles.likeUser} onClick={(e) => e.stopPropagation()}>
                   {name}
                 </div>
               ))
