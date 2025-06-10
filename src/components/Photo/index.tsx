@@ -153,6 +153,7 @@ const Photo = (
           size="xs"
           backdrop="static"
           className={styles.likesModal}
+          onClick={(e) => e.stopPropagation()}
         >
           <Modal.Header>
             <Modal.Title><h3>Le gusta a:</h3></Modal.Title>
