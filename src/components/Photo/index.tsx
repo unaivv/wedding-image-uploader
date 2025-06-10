@@ -4,7 +4,7 @@ import type { IPhoto, IUser } from "../AllPhotos/types";
 import styles from "./Photo.module.css";
 import CloseIcon from '@rsuite/icons/Close';
 import { deleteFile, likeFile } from "../Upload/service";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { auth } from "../../utils/auth";
 
 const Photo = (
@@ -13,7 +13,9 @@ const Photo = (
   deleteLocalPhotos: (photoId: string) => void
 ) => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [showLikes, setShowLikes] = useState(false); // Nuevo estado
+  const [showLikes, setShowLikes] = useState(false);
+  const holdTimeout = useRef<NodeJS.Timeout | null>(null);
+  const isHolding = useRef(false);
 
   const userName = (photo as IPhoto).user.name || (photo as IPhoto).user.email || 'User'
   const canDelete = auth.getUserId() === (photo as IPhoto).user._id
@@ -53,8 +55,29 @@ const Photo = (
       });
   }
 
-  const handleLike = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+  const handleLikeButtonTouchStart = (e: React.TouchEvent<HTMLSpanElement>) => {
     e.stopPropagation();
+    isHolding.current = false;
+    holdTimeout.current = setTimeout(() => {
+      setShowLikes(true);
+      isHolding.current = true;
+    }, 400);
+  };
+
+  const handleLikeButtonTouchEnd = (e: React.TouchEvent<HTMLSpanElement>) => {
+    e.stopPropagation();
+    if (holdTimeout.current) {
+      clearTimeout(holdTimeout.current);
+    }
+    if (isHolding.current) {
+      setShowLikes(false);
+      isHolding.current = false;
+    }
+  };
+
+  const handleLike = (e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.TouchEvent<HTMLSpanElement>) => {
+    e.stopPropagation();
+    if (isHolding.current) return;
     likeFile((photo as IPhoto).id || "", auth.getUserId() || "")
       .then((liked) => {
         setLiked(liked);
@@ -76,8 +99,7 @@ const Photo = (
       .catch((error) => {
         console.error("Error liking file:", error);
       });
-
-  }
+  };
 
   return (
     <div
@@ -131,6 +153,8 @@ const Photo = (
             onClick={handleLike}
             onMouseEnter={() => setShowLikes(true)}
             onMouseLeave={() => setShowLikes(false)}
+            onTouchStart={handleLikeButtonTouchStart}
+            onTouchEnd={handleLikeButtonTouchEnd}
           >
             {liked ? '❤️' : '🤍'} {((photo as IPhoto).likedBy || []).length}
             {showLikes && likedUsers.length > 0 && (
