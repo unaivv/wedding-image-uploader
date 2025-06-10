@@ -63,8 +63,6 @@ const Photo = (
 
   }
 
-  console.log((photo as IPhoto).user.picture)
-
   return (
     <div
       style={{
@@ -103,7 +101,7 @@ const Photo = (
         <div className={styles.userNameWrapper}>
           <div className={styles.avatar}>
             <Image
-              src={(photo as IPhoto).user.picture || ''}
+              src={(photo as IPhoto).user.picture}
               alt={userName}
               circle
               style={{ width: '20px', height: '20px'}} 
