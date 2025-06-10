@@ -35,9 +35,15 @@ router.get("/get-all", async (req: Request, res: Response) => {
           $and: [
             { eventId: eventId },
           ]
-        }).sort({ createdAt: -1 }).exec();
+        })
+        .sort({ createdAt: -1 })
+        .populate('userId')
+        .exec();
       }
-      return FileModel.find({ eventId: eventId }).sort({ createdAt: -1 }).exec();
+      return FileModel.find({ eventId: eventId })
+        .sort({ createdAt: -1 })
+        .populate('userId')
+        .exec();
     });
 
     res.json(files);
@@ -171,15 +177,22 @@ router.get("/delete", async (req: Request, res: Response) => {
       res.status(404).json({ error: "File not found" });
       return;
     }
-    const cloudinaryId = file.fileName.split('/').pop()?.split('.')[0];
-    if (!cloudinaryId) {
+    const cloudinaryFullId = file.fullSrc.split('/').pop()?.split('.')[0];
+    const cloudinaryCompressedId = file.compressedSrc.split('/').pop()?.split('.')[0];
+    if (!cloudinaryCompressedId || !cloudinaryFullId) {
       res.status(400).json({ error: "Invalid file name format" });
       return;
     }
 
-    const deletedFIleInCloudinary = deleteFileFromCloudinary(cloudinaryId);
+    const deletedFIleInCloudinary = deleteFileFromCloudinary(cloudinaryFullId);
     if (!deletedFIleInCloudinary) {
       res.status(500).json({ error: "Failed to delete file from Cloudinary" });
+      return;
+    }
+    
+    const deletedCompressedFileInCloudinary = deleteFileFromCloudinary(cloudinaryCompressedId);
+    if (!deletedCompressedFileInCloudinary) {
+      res.status(500).json({ error: "Failed to delete compressed file from Cloudinary" });
       return;
     }
 

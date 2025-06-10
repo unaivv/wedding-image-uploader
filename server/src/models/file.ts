@@ -16,9 +16,12 @@ export const fileSchema = new Schema(
 );
 
 export interface IFile extends Document {
-    fileName: string;
+    fullSrc: string;
+    compressedSrc: string;
     eventId: mongoose.Types.ObjectId;
+    userId: mongoose.Types.ObjectId;
     createdAt?: Date;
+    updatedAt?: Date;
 }
 
 const FileModel = mongoose.model<IFile>('File', fileSchema);

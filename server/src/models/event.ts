@@ -19,7 +19,7 @@ export interface IEvent extends Document {
     name: string;
     date: Date;
     location: string;
-    description: string;
+    description?: string;
     createdAt?: Date;
     updatedAt?: Date;
 }

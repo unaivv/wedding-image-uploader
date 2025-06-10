@@ -16,9 +16,12 @@ export const userSchema = new Schema(
 );
 
 export interface IUser extends Document {
-    fileName: string;
-    eventId: mongoose.Types.ObjectId;
+    picture?: string;
+    email: string;
+    fullName: string;
+    name: string;
     createdAt?: Date;
+    updatedAt?: Date;
 }
 
 const UserModel = mongoose.model<IUser>('User', userSchema);

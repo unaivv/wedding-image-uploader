@@ -1,3 +1,13 @@
+export interface IUser {
+    email: string
+    fullName: string
+    _id: string
+    createdAt: string
+    updatedAt: string
+    picture?: string
+    name?: string
+}
+
 export interface IPhoto {
     src: string
     width: number
@@ -14,8 +24,6 @@ export interface IPhotosFromBackend {
     compressedSrc: string
     fullSrc: string
     updatedAt: string
-    userName: string
-    userEmail?: string
-    user?: string
     id: string
+    userId: IUser
 }
