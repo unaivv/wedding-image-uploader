@@ -1,11 +1,12 @@
 import { type RenderImageContext, type RenderImageProps } from "react-photo-album";
-import { Image, Loader } from "rsuite";
+import { Image, Loader, Modal } from "rsuite";
 import type { IPhoto, IUser } from "../AllPhotos/types";
 import styles from "./Photo.module.css";
 import CloseIcon from '@rsuite/icons/Close';
 import { deleteFile, likeFile } from "../Upload/service";
 import { useState, useRef } from "react";
 import { auth } from "../../utils/auth";
+import ArrowDownLineIcon from '@rsuite/icons/ArrowDownLine';
 
 const Photo = (
   { alt = "", title, sizes }: RenderImageProps,
@@ -14,7 +15,6 @@ const Photo = (
 ) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [showLikes, setShowLikes] = useState(false);
-  const holdTimeout = useRef<NodeJS.Timeout | null>(null);
   const isHolding = useRef(false);
 
   const userName = (photo as IPhoto).user.name || (photo as IPhoto).user.email || 'User'
@@ -54,26 +54,6 @@ const Photo = (
         setLoading(false);
       });
   }
-
-  const handleLikeButtonTouchStart = (e: React.TouchEvent<HTMLSpanElement>) => {
-    e.stopPropagation();
-    isHolding.current = false;
-    holdTimeout.current = setTimeout(() => {
-      setShowLikes(true);
-      isHolding.current = true;
-    }, 400);
-  };
-
-  const handleLikeButtonTouchEnd = (e: React.TouchEvent<HTMLSpanElement>) => {
-    e.stopPropagation();
-    if (holdTimeout.current) {
-      clearTimeout(holdTimeout.current);
-    }
-    if (isHolding.current) {
-      setShowLikes(false);
-      isHolding.current = false;
-    }
-  };
 
   const handleLike = (e: React.MouseEvent<HTMLSpanElement, MouseEvent> | React.TouchEvent<HTMLSpanElement>) => {
     e.stopPropagation();
@@ -151,23 +131,44 @@ const Photo = (
           <span
             className={`${styles.likeButton} ${liked ? styles.liked : ''}`}
             onClick={handleLike}
-            onMouseEnter={() => setShowLikes(true)}
-            onMouseLeave={() => setShowLikes(false)}
-            onTouchStart={handleLikeButtonTouchStart}
-            onTouchEnd={handleLikeButtonTouchEnd}
           >
-            {liked ? '❤️' : '🤍'} {((photo as IPhoto).likedBy || []).length}
-            {showLikes && likedUsers.length > 0 && (
-              <div className={styles.likesTooltip}>
-                <span>Le gusta a:</span>
-                {likedUsers.map((name, idx) => (
-                  <div key={idx}>{name}</div>
-                ))}
-              </div>
-            )}
+            {liked ? '❤️' : '🤍'}{' '}
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowLikes(true);
+              }}
+            >
+              {((photo as IPhoto).likedBy || []).length}<ArrowDownLineIcon />
+            </span>
           </span>
         </div>
       </div>
+      <Modal
+          open={showLikes}
+          onClose={(e) => {
+            e.stopPropagation();
+            setShowLikes(false)
+          }}
+          size="xs"
+          backdrop="static"
+          className={styles.likesModal}
+        >
+          <Modal.Header>
+            <Modal.Title><h3>Le gusta a:</h3></Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {likedUsers.length > 0 ? (
+              likedUsers.map((name, idx) => (
+                <div key={idx} className={styles.likeUser}>
+                  {name}
+                </div>
+              ))
+            ) : (
+              <div>No hay usuarios que le gusten</div>
+            )}
+          </Modal.Body>
+        </Modal>
     </div>
   );
 }
