@@ -1,7 +1,7 @@
-export const getAllPhotos = async (eventId: string, user?: string) => {
+export const getAllPhotos = async (eventId: string, userId?: string) => {
     let url = `${import.meta.env.VITE_BACKEND_URL}/files/get-all?eventId=${eventId}`
-    if (user) {
-        url += `&user=${user}`;
+    if (userId) {
+        url += `&userId=${userId}`;
     }
     const response = await fetch(url, {
         headers: new Headers({

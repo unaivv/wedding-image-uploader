@@ -1,8 +1,34 @@
-.allPhotosConatiner{
-     img {
+.allPhotosConatiner {
+    img {
         object-fit: cover;
-     }
-     button:focus{
-         outline: none !important;
-     }
+    }
+
+    button:focus {
+        outline: none !important;
+    }
+
+    .actions{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+
+        .right{
+            display: flex;
+            align-items: center;
+            gap: 20px;
+
+            .filters{
+                display: flex;
+                gap: 10px;
+            }
+    
+            .sort{
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+        }
+
+    }
 }

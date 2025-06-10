@@ -18,29 +18,20 @@ router.get("/get-all", async (req: Request, res: Response) => {
     res.status(400).json({ error: "Request params is required" });
     return;
   }
-  const { eventId, user } = params;
+  const { eventId, userId } = params;
   if (!eventId) {
     res.status(400).json({ error: "Missing required field: eventId" });
     return;
   }
   try {
     const files = await useDatabase<IFile[]>(async () => {
-      if (user) {
-        return FileModel.find({
-          $or: [
-            { name: user },
-            { userEmail: user },
-            { userName: user }
-          ],
-          $and: [
-            { eventId: eventId },
-          ]
-        })
-        .sort({ createdAt: -1 })
-        .populate('userId')
-        .exec();
+      const filters:{eventId: string;userId?: string;} = {
+        eventId: eventId as string
       }
-      return FileModel.find({ eventId: eventId })
+      if (userId && typeof userId === "string") {
+        filters.userId = userId;
+      }
+      return FileModel.find(filters)
         .sort({ createdAt: -1 })
         .populate('userId')
         .exec();

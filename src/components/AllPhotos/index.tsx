@@ -10,24 +10,29 @@ import { Loader, Toggle } from "rsuite";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import Photo from "../Photo";
 import type { IPhoto, IPhotosFromBackend } from "./types";
+import { Button } from "rsuite";
+import { Link } from "react-router-dom";
+import PlusIcon from '@rsuite/icons/Plus';
 
 const AllPhotos = () => {
 
     const [photos, setPhotos] = useState<IPhoto[] | undefined | null>(undefined);
     const [lightboxPhotos, setLightboxPhotos] = useState<IPhoto[] | undefined | null>(undefined);
     const [index, setIndex] = useState(-1);
+    const [orderByLikes, setOrderByLikes] = useState<boolean>(false);
 
     const [seeAllFotos, setAllPhotos] = useState<'true' | 'false'>('true');
 
     const handleGetAllPhotos = useCallback(() => {
         setPhotos(undefined);
-        const userEmail = auth.getUserEmail()
-        if (auth.isLoggedIn() && userEmail) {
-            getAllPhotos('683ef05ad8795795535d3b4f',
-                seeAllFotos === 'true' ? undefined : userEmail
+        const userId = auth.getUserId()
+        if (auth.isLoggedIn() && userId) {
+            getAllPhotos(
+                '683ef05ad8795795535d3b4f',
+                seeAllFotos === 'true' ? undefined : userId
             )
                 .then((data: IPhotosFromBackend[]) => {
-                    setPhotos(data.map((photo: IPhotosFromBackend):IPhoto => ({
+                    setPhotos(data.map((photo: IPhotosFromBackend): IPhoto => ({
                         src: photo.compressedSrc,
                         width: 200,
                         height: 200,
@@ -36,7 +41,7 @@ const AllPhotos = () => {
                         user: photo.userId,
                         likedBy: photo.likedBy || [],
                     })));
-                    setLightboxPhotos(data.map((photo: IPhotosFromBackend):IPhoto => ({
+                    setLightboxPhotos(data.map((photo: IPhotosFromBackend): IPhoto => ({
                         src: photo.fullSrc,
                         width: 1500,
                         height: 1500,
@@ -57,7 +62,7 @@ const AllPhotos = () => {
         handleGetAllPhotos();
     }, [handleGetAllPhotos]);
 
-    const deleteLocalPhotos = (photoId:string) => {
+    const deleteLocalPhotos = (photoId: string) => {
         setPhotos((prevPhotos) => {
             if (!prevPhotos) return prevPhotos;
             return prevPhotos.filter(photo => photo.id !== photoId);
@@ -71,7 +76,7 @@ const AllPhotos = () => {
 
     const renderPhotos = () => {
         if (photos === undefined) {
-            return <Loader size="lg" style={{marginTop: '2em'}} />
+            return <Loader size="lg" style={{ marginTop: '2em' }} />
         }
 
         if (photos === null) {
@@ -84,7 +89,14 @@ const AllPhotos = () => {
 
         return (<>
             <RowsPhotoAlbum
-                photos={photos}
+                photos={
+                    photos.sort((a, b) => {
+                        if (!orderByLikes) {
+                            return new Date(b.id).getTime() - new Date(a.id).getTime();
+                        }
+                        return b.likedBy.length - a.likedBy.length;
+                    })
+                }
                 targetRowHeight={150}
                 onClick={({ index: current }) => setIndex(current)}
                 padding={2.5}
@@ -99,7 +111,12 @@ const AllPhotos = () => {
             />
             <Lightbox
                 index={index}
-                slides={lightboxPhotos || []}
+                slides={lightboxPhotos?.sort((a, b) => {
+                    if (orderByLikes) {
+                        return new Date(b.id).getTime() - new Date(a.id).getTime();
+                    }
+                    return b.likedBy.length - a.likedBy.length;
+                }) || []}
                 open={index >= 0}
                 close={() => setIndex(-1)}
                 plugins={[Zoom]}
@@ -114,16 +131,37 @@ const AllPhotos = () => {
 
     return (
         <div className={styles.allPhotosConatiner}>
-            <Toggle
-                size="lg"
-                checkedChildren="Todas"
-                unCheckedChildren="Mias"
-                checked={seeAllFotos === 'true'}
-                onChange={
-                    (value: boolean) => setAllPhotos(value ? 'true' : 'false')
-                }
-                style={{ marginBottom: 20 }} 
-            />
+            <div className={styles.actions}>
+                <Link to="/subir">
+                    <Button appearance="ghost" endIcon={<PlusIcon />}>
+                        Subir fotos
+                    </Button>
+                </Link>
+                <div className={styles.right}>
+                    <div className={styles.sort}>
+                        <span>Ordenar por:</span>
+                        <Toggle
+                            size="lg"
+                            checkedChildren="Me gusta"
+                            unCheckedChildren="Fecha"
+                            checked={orderByLikes}
+                            onChange={(value: boolean) => setOrderByLikes(value)}
+                        />
+                    </div>
+                    <div className={styles.filters}>
+                        <span>Filtrar:</span>
+                        <Toggle
+                            size="lg"
+                            checkedChildren="Todas"
+                            unCheckedChildren="Mias"
+                            checked={seeAllFotos === 'true'}
+                            onChange={
+                                (value: boolean) => setAllPhotos(value ? 'true' : 'false')
+                            }
+                        />
+                    </div>
+                </div>
+            </div>
             <div>
                 {renderPhotos()}
             </div>
