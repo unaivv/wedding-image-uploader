@@ -13,6 +13,7 @@ import type { IPhoto, IPhotosFromBackend } from "./types";
 import { Button } from "rsuite";
 import { Link } from "react-router-dom";
 import PlusIcon from '@rsuite/icons/Plus';
+import ReloadIcon from '@rsuite/icons/Reload'; // Agrega este import si tienes el icono, o usa otro
 
 const AllPhotos = () => {
 
@@ -133,11 +134,21 @@ const AllPhotos = () => {
     return (
         <div className={styles.allPhotosConatiner}>
             <div className={styles.actions}>
-                <Link to="/subir">
-                    <Button appearance="ghost" endIcon={<PlusIcon />}>
-                        Subir fotos
+                <div className={styles.left}>
+                    <Link to="/subir">
+                        <Button appearance="ghost" endIcon={<PlusIcon />}>
+                            Subir fotos
+                        </Button>
+                    </Link>
+                    <Button
+                        appearance="ghost"
+                        onClick={handleGetAllPhotos}
+                        style={{ marginLeft: 8 }}
+                        endIcon={<ReloadIcon />}
+                    >
+                        Refrescar
                     </Button>
-                </Link>
+                </div>
                 <div className={styles.right}>
                     <div className={styles.sort}>
                         <span>Ordenar por:</span>

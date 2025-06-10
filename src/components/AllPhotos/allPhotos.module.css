@@ -13,6 +13,11 @@
         align-items: center;
         margin-bottom: 20px;
 
+        .left{
+            display: flex;
+            align-items: center;
+        }
+
         .right{
             display: flex;
             align-items: center;
