@@ -17,3 +17,24 @@ export const deleteFile = async (fileId: string): Promise<boolean> => {
         return false;
     }
 }
+
+export const likeFile = async (fileId: string, userId: string): Promise<boolean> => {
+    try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/like?fileId=${fileId}&userId=${userId}`, {
+            headers: {
+                "ngrok-skip-browser-warning": "69420", //TODO: ONLY FOR DEV
+            }
+        });
+
+        if (!response.ok) {
+            console.error('Failed to like file:', response);
+            return false;
+        }
+
+        const data = await response.json();
+        return data.liked;
+    } catch (error) {
+        console.error('Error liking file:', error);
+        return false;
+    }
+}

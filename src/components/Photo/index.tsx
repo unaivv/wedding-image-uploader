@@ -1,11 +1,11 @@
 
 
 import { type RenderImageContext, type RenderImageProps } from "react-photo-album";
-import { Avatar, Image, Loader } from "rsuite";
+import { Image, Loader } from "rsuite";
 import type { IPhoto } from "../AllPhotos/types";
 import styles from "./Photo.module.css";
 import CloseIcon from '@rsuite/icons/Close';
-import { deleteFile } from "../Upload/service";
+import { deleteFile, likeFile } from "../Upload/service";
 import { useState } from "react";
 import { auth } from "../../utils/auth";
 
@@ -17,21 +17,22 @@ const Photo = (
 
   const [loading, setLoading] = useState<boolean>(false);
 
-  const userName = (photo as IPhoto).userName || (photo as IPhoto).userEmail || 'User'
-  const canDelete = auth.getUserId() === (photo as IPhoto).userId
-  console.log(auth.getUserId(), (photo as IPhoto).userId)
+  const userName = (photo as IPhoto).user.name || (photo as IPhoto).user.email || 'User'
+  const canDelete = auth.getUserId() === (photo as IPhoto).user._id
+
+  const [liked, setLiked] = useState<boolean>((photo as IPhoto).likedBy?.includes(auth.getUserId() || ""));
 
   const handleDelete = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
     e.stopPropagation();
-    if(loading || !canDelete) return;
+    if (loading || !canDelete) return;
     setLoading(true);
     deleteFile((photo as IPhoto).id || "")
       .then((success) => {
         if (success) {
           deleteLocalPhotos((photo as IPhoto).id || "");
           return true
-        } 
-        console.error("Failed to delete file"); 
+        }
+        console.error("Failed to delete file");
         return false;
       })
       .catch((error) => {
@@ -41,6 +42,28 @@ const Photo = (
         setLoading(false);
       });
   }
+
+  const handleLike = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
+    e.stopPropagation();
+    likeFile((photo as IPhoto).id || "", auth.getUserId() || "")
+      .then((liked) => {
+        setLiked(liked);
+        if (liked) {
+          const userId = auth.getUserId();
+          if (userId) {
+            (photo as IPhoto).likedBy = [...((photo as IPhoto).likedBy || []), userId];
+          }
+        } else {
+          (photo as IPhoto).likedBy = (photo as IPhoto).likedBy?.filter(id => id !== auth.getUserId());
+        }
+      })
+      .catch((error) => {
+        console.error("Error liking file:", error);
+      });
+
+  }
+
+  console.log((photo as IPhoto).user.picture)
 
   return (
     <div
@@ -76,19 +99,26 @@ const Photo = (
           height: "calc(100% - 30px)",
         }}
       />
-      <div className={styles.userNameWrapper}>
-        <Avatar
-          style={{
-            backgroundColor: `#004299`,
-          }}
-          circle
-          size="xs"
-        >
-          {
-            userName.charAt(0)?.toUpperCase()
-          }
-        </Avatar>
-        <span>{userName?.split('@')[0]}</span>
+      <div className={styles.photoBottom}>
+        <div className={styles.userNameWrapper}>
+          <div className={styles.avatar}>
+            <Image
+              src={(photo as IPhoto).user.picture || ''}
+              alt={userName}
+              circle
+              style={{ width: '20px', height: '20px'}} 
+            />
+          </div>
+          <span>{userName?.split('@')[0]}</span>
+        </div>
+        <div className={styles.actions}>
+          <span
+            className={`${styles.likeButton} ${liked ? styles.liked : ''}`}
+            onClick={handleLike}
+          >
+            {liked ? '❤️' : '🤍'} {((photo as IPhoto).likedBy || []).length}
+          </span>
+        </div>
       </div>
     </div>
   );

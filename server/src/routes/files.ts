@@ -189,7 +189,7 @@ router.get("/delete", async (req: Request, res: Response) => {
       res.status(500).json({ error: "Failed to delete file from Cloudinary" });
       return;
     }
-    
+
     const deletedCompressedFileInCloudinary = deleteFileFromCloudinary(cloudinaryCompressedId);
     if (!deletedCompressedFileInCloudinary) {
       res.status(500).json({ error: "Failed to delete compressed file from Cloudinary" });
@@ -206,5 +206,53 @@ router.get("/delete", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 })
+
+router.get('/like', async (req: Request, res: Response) => {
+  const params = req.query;
+  if (!params) {
+    res.status(400).json({ error: "Request params is required" });
+    return;
+  }
+  const { fileId, userId } = params;
+  if (!fileId || !userId) {
+    res.status(400).json({ error: "Missing required fields: fileId or userId" });
+    return;
+  }
+  try {
+    const file = await useDatabase<IFile | null>(async () => {
+      return FileModel
+        .findById(fileId)
+        .exec();
+    }
+    );
+    if (!file) {
+      res.status(404).json({ error: "File not found" });
+      return;
+    }
+    const likedBy = file.likedBy || [];
+    const mongoose = require("mongoose");
+    const userObjectId = new mongoose.Types.ObjectId(userId as string);
+
+    if (likedBy.some((id: any) => id.equals(userObjectId))) {
+      await useDatabase(async () => {
+        file.likedBy = likedBy.filter((id: any) => !id.equals(userObjectId));
+        await file.save();
+      });
+      res.json({ message: "Like removed", liked: false });
+    } else {
+      await useDatabase(async () => {
+        if (!file.likedBy) {
+          file.likedBy = [];
+        }
+        file.likedBy.push(userObjectId);
+        await file.save();
+      });
+      res.json({ message: "File liked", liked: true });
+    }
+  } catch (error) {
+    console.error("Error liking file:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 export default router;

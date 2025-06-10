@@ -7,7 +7,8 @@ export const fileSchema = new Schema(
         eventId: { type: Schema.Types.ObjectId, ref: 'Event', required: true },
         userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
         createdAt: { type: Date, default: Date.now },
-        updatedAt: { type: Date, default: Date.now }
+        updatedAt: { type: Date, default: Date.now },
+        likedBy: [{ type: Schema.Types.ObjectId, ref: 'User', default: []}]
     }, 
     {
         timestamps: true,
@@ -22,6 +23,7 @@ export interface IFile extends Document {
     userId: mongoose.Types.ObjectId;
     createdAt?: Date;
     updatedAt?: Date;
+    likedBy?: mongoose.Types.ObjectId[];
 }
 
 const FileModel = mongoose.model<IFile>('File', fileSchema);

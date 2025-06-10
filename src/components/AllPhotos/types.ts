@@ -14,9 +14,8 @@ export interface IPhoto {
     height: number
     id: string
     alt: string
-    userName?: string
-    userEmail?: string
-    userId: string
+    user: IUser
+    likedBy: string[]
 }
 
 export interface IPhotosFromBackend {
@@ -27,4 +26,5 @@ export interface IPhotosFromBackend {
     updatedAt: string
     id: string
     userId: IUser
+    likedBy: string[]
 }

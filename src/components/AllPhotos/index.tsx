@@ -33,9 +33,8 @@ const AllPhotos = () => {
                         height: 200,
                         id: photo.id,
                         alt: '',
-                        userName: photo.userId.name || photo.userId.email.split('@')[0],
-                        userEmail: photo.userId.email,
-                        userId: photo.userId._id,
+                        user: photo.userId,
+                        likedBy: photo.likedBy || [],
                     })));
                     setLightboxPhotos(data.map((photo: IPhotosFromBackend):IPhoto => ({
                         src: photo.fullSrc,
@@ -43,8 +42,8 @@ const AllPhotos = () => {
                         height: 1500,
                         id: photo.id,
                         alt: photo.fullSrc,
-                        userName: photo.userId.name || photo.userId.email.split('@')[0],
-                        userId: photo.userId._id,
+                        user: photo.userId,
+                        likedBy: photo.likedBy || [],
                     })));
                 })
                 .catch(() => {
