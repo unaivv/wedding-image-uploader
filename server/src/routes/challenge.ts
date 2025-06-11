@@ -1,0 +1,40 @@
+import { Router, Request, Response } from "express";
+import { useDatabase } from "../services/ddbb";
+import ChallengeModel from "../models/challenge";
+
+const router = Router();
+
+router.get("/create", async (req: Request, res: Response) => {
+
+    const newChallenge = new ChallengeModel({
+        title: "Primer baile",
+        event: "683ef05ad8795795535d3b4f",
+        description: "Captura el momento más emotivo del primer baile de los novios.",
+        endDate: new Date(Date.now() + 4 * 60 * 60 * 1000),
+        topic: "Baile",
+        participants: [],
+        winner: null
+    });
+
+    await useDatabase(async () => {
+        await newChallenge.save();
+        console.log("New Challenge created:", newChallenge);
+    })
+
+    res.json(newChallenge);
+});
+
+router.get("/list", async (req: Request, res: Response) => {
+    const { eventId } = req.query;
+    if (!eventId) {
+        res.status(400).json({ error: "Event ID is required" });
+        return;
+    }
+    const challenges = await useDatabase(async () => {
+        return await ChallengeModel.find().populate("participants.user").populate("participants.file").exec();
+    });
+
+    res.json(challenges);
+});
+
+export default router;
