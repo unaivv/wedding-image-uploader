@@ -3,5 +3,5 @@ export type Challenge = {
     title: string;
     description: string;
     topic: string;
-    deadline: string;
+    endDate: string;
 };

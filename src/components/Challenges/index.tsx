@@ -5,9 +5,16 @@ import { Button, Loader } from "rsuite";
 import { getAllChallenges } from "./service";
 
 const renderCountdown = (deadline: string, now: Date): string => {
-    const deadlineDate = new Date(deadline);
-    const timeDiff = deadlineDate.getTime() - now.getTime();
+    if(!deadline){
+        return "Fecha de plazo inválida 1";
+    }
 
+    const deadlineDate = new Date(deadline);
+    if (isNaN(deadlineDate.getTime())) {
+        return "Fecha de plazo inválida 2";
+    }
+
+    const timeDiff = deadlineDate.getTime() - now.getTime();
     if (timeDiff <= 0) {
         return "El plazo ha expirado";
     }
@@ -71,7 +78,7 @@ const ChallengesPage: React.FC = () => {
                     <strong>Topic:</strong> {challenge.topic}
                 </p>
                 <p>
-                    <strong>Quedan</strong> {renderCountdown(challenge.deadline, now)}
+                    <strong>Quedan</strong> {renderCountdown(challenge.endDate, now)}
                 </p>
                 <Button appearance="ghost">Upload Photo</Button>
             </div>
