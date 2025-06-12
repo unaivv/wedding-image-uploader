@@ -1,5 +1,5 @@
 import { type RenderImageContext, type RenderImageProps } from "react-photo-album";
-import { Image, Loader, Modal } from "rsuite";
+import { Image, Loader, Tooltip, Whisper } from "rsuite";
 import type { IPhoto, IUser } from "../AllPhotos/types";
 import styles from "./Photo.module.css";
 import CloseIcon from '@rsuite/icons/Close';
@@ -14,7 +14,6 @@ const Photo = (
   deleteLocalPhotos: (photoId: string) => void
 ) => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [showLikes, setShowLikes] = useState(false);
   const isHolding = useRef(false);
 
   const userName = (photo as IPhoto).user.name || (photo as IPhoto).user.email || 'User'
@@ -133,49 +132,30 @@ const Photo = (
             onClick={handleLike}
           >
             {liked ? '❤️' : '🤍'}{' '}
-            <span
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowLikes(true);
-              }}
+            <Whisper
+              placement="top"
+              trigger="click"
+              speaker={<Tooltip onClick={(e) => e.stopPropagation()}>
+                {likedUsers.length > 0 ? (
+                  likedUsers.map((name, idx) => (
+                    <div key={idx} className={styles.likeUser} onClick={(e) => e.stopPropagation()}>
+                      {name}
+                    </div>
+                  ))
+                ) : (
+                  <div>No hay usuarios que le gusten</div>
+                )}
+              </Tooltip>}
             >
-              {((photo as IPhoto).likedBy || []).length}<ArrowDownLineIcon />
-            </span>
+              <span
+                onClick={(e) => e.stopPropagation()}
+              >
+                {((photo as IPhoto).likedBy || []).length}<ArrowDownLineIcon />
+              </span>
+            </Whisper>
           </span>
         </div>
       </div>
-      <Modal
-          open={showLikes}
-          onClose={(e) => {
-            e.stopPropagation();
-            setShowLikes(false)
-          }}
-          size="xs"
-          backdrop={true}
-          className={styles.likesModal}
-          onClick={(e) => e.stopPropagation()}
-          onBackdropClick={(e) => {
-            e.stopPropagation();
-            setShowLikes(false);
-          }}
-        >
-          <Modal.Header onClick={(e) => e.stopPropagation()}>
-            <Modal.Title onClick={(e) => e.stopPropagation()}>Le gusta a:</Modal.Title>
-          </Modal.Header>
-          <Modal.Body
-          onClick={(e) => e.stopPropagation()}
-          >
-            {likedUsers.length > 0 ? (
-              likedUsers.map((name, idx) => (
-                <div key={idx} className={styles.likeUser} onClick={(e) => e.stopPropagation()}>
-                  {name}
-                </div>
-              ))
-            ) : (
-              <div>No hay usuarios que le gusten</div>
-            )}
-          </Modal.Body>
-        </Modal>
     </div>
   );
 }
