@@ -5,8 +5,9 @@ import type { FileType, UploaderInstance } from 'rsuite/esm/Uploader/Uploader';
 import styles from './Upload.module.css';
 import CloseIcon from '@rsuite/icons/Close';
 import CheckRoundIcon from '@rsuite/icons/CheckRound';
+import type { IUploadProps } from './types';
 
-const Upload = () => {
+const Upload = ({ onlyButton, extraParams = {} }: IUploadProps) => {
     const userEmail = auth.getUserEmail();
     const userName = auth.getUserName();
 
@@ -14,6 +15,33 @@ const Upload = () => {
 
     const [loading, setLoading] = useState(false);
     const [files, setFiles] = useState<FileType[]>([]);
+
+    const renderUploadInterior = () => {
+        if (onlyButton) {
+            if (files.length > 0) {
+                return <></>
+            }
+            return <Button appearance="ghost" style={{ marginTop: 10 }}>
+                Selecciona tus foto!
+            </Button>
+        }
+        return <>
+            <span style={{
+                textAlign: 'center',
+                fontSize: 16,
+                color: '#888',
+                marginBottom: 10,
+                maxWidth: '100%',
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word',
+                whiteSpace: 'normal',
+            }}>
+                Haz clic o arrastra archivos a esta área para subirlos. Maximos archivos a la vez 10.
+            </span><Button appearance="ghost" style={{ marginTop: 10 }}>
+                Selecciona tus fotos!
+            </Button>
+        </>
+    }
 
     return (
         <div className={styles.upload}>
@@ -27,18 +55,19 @@ const Upload = () => {
                 }}
                 disabled={!userEmail || !userName || loading || files.length === 0}
             >
-                Subir imagenes
+                Subir imagen{!onlyButton && 'es'}
             </Button>
             <Uploader
                 ref={uploaderRef}
                 action={`${import.meta.env.VITE_BACKEND_URL}/files/upload`}
                 draggable
                 accept="image/*"
-                multiple
+                multiple={!onlyButton}
                 listType="picture"
                 data={{
                     eventId: '683ef05ad8795795535d3b4f',
                     userId: auth.getUserId(),
+                    ...extraParams
                 }}
                 style={{
                     width: '100%',
@@ -48,7 +77,7 @@ const Upload = () => {
                     alignItems: 'stretch',
                 }}
                 headers={{
-                    "ngrok-skip-browser-warning": "69420", //TODO: ONLY FOR DEV
+                    "ngrok-skip-browser-warning": "69420"
                 }}
                 autoUpload={false}
                 renderThumbnail={(file) => {
@@ -114,30 +143,9 @@ const Upload = () => {
                 }}
                 fileList={files}
             >
-                <div style={{
-                    width: '100%',
-                    height: 200,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'column',
-                    padding: 20,
-                }}>
-                    <span style={{
-                        textAlign: 'center',
-                        fontSize: 16,
-                        color: '#888',
-                        marginBottom: 10,
-                        maxWidth: '100%',
-                        overflowWrap: 'break-word',
-                        wordBreak: 'break-word',
-                        whiteSpace: 'normal',
-                    }}>
-                        Haz clic o arrastra archivos a esta área para subirlos. Maximos archivos a la vez 10
-                    </span>
-                    <Button appearance="ghost" style={{ marginTop: 10 }}>
-                        Selecciona tus fotos!
-                    </Button>
+                <div className={`${styles.uploadContainer} ${onlyButton ? styles.onlyButton : ''}`}>
+
+                    {renderUploadInterior()}
                 </div>
             </Uploader>
         </div>

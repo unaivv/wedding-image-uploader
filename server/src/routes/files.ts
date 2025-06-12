@@ -6,6 +6,7 @@ import path from "path";
 import FileModel, { IFile } from "../models/file";
 import { deleteFileFromCloudinary, uploadFileToCloudinary } from "../services/useCloudinary";
 import { compressImage, convertToWebp } from "../services/images";
+import ChallengeModel from "../models/challenge";
 
 const router = Router();
 const folder = path.join(__dirname, '../buckets/images/');
@@ -25,7 +26,7 @@ router.get("/get-all", async (req: Request, res: Response) => {
   }
   try {
     const files = await useDatabase<IFile[]>(async () => {
-      const filters:{eventId: string;userId?: string;} = {
+      const filters: { eventId: string; userId?: string; } = {
         eventId: eventId as string
       }
       if (userId && typeof userId === "string") {
@@ -52,7 +53,7 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
     return;
   }
 
-  const { eventId, userId } = body;
+  const { eventId, userId, challengeId } = body;
 
   if (!eventId || !userId) {
     res.status(400).json({ error: "Missing required fields: eventId or userId" });
@@ -84,14 +85,14 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
 
     const cloudinaryFullImageUrl = await uploadFileToCloudinary(webpImage, eventId)
 
-    if(!cloudinaryFullImageUrl){
+    if (!cloudinaryFullImageUrl) {
       console.error("Error uploading file to Cloudinary");
       res.status(500).json({ error: "Failed to upload file to Cloudinary" });
       return;
     }
 
     const imageCompressed = await compressImage(filePath)
-    
+
     if (!imageCompressed) {
       console.error("Error compressing image");
       res.status(500).json({ error: "Failed to compress image" });
@@ -124,6 +125,30 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
           const document = await fileDoc.save();
           return document
         })
+
+        if (challengeId) {
+          const updatedChallenge = await useDatabase(async () => {
+            const updatedChallenge = await ChallengeModel.updateOne(
+              { _id: challengeId },
+              {
+                $push: {
+                  participants: {
+                    user: body.userId,
+                    file: savedFile.id,
+                    uploadedAt: new Date()
+                  }
+                }
+              }
+            ).exec();
+            return updatedChallenge;
+          })
+          if (!updatedChallenge) {
+            console.error("Error updating challenge with new participant");
+            res.status(500).json({ error: "Failed to update challenge with new participant" });
+            return;
+          }
+        }
+
         dbId = savedFile.id;
       } catch (err) {
         console.error("Error saving file info to DB:", err);
