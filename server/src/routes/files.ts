@@ -25,13 +25,30 @@ router.get("/get-all", async (req: Request, res: Response) => {
     return;
   }
   try {
+    const challengeFiles = await useDatabase<string[]>(async () => {
+      const challenges = await ChallengeModel.find({}, { "participants.file": 1 }).lean().exec();
+      const fileIds: string[] = [];
+      challenges.forEach(challenge => {
+        if (challenge.participants && Array.isArray(challenge.participants)) {
+          challenge.participants.forEach((p: any) => {
+            if (p.file) fileIds.push(p.file.toString());
+          });
+        }
+      });
+      return fileIds;
+    });
+
+    const filters: { eventId: string; userId?: string; _id?: { $nin: string[] } } = {
+      eventId: eventId as string
+    };
+    if (userId && typeof userId === "string") {
+      filters.userId = userId;
+    }
+    if (challengeFiles.length > 0) {
+      filters._id = { $nin: challengeFiles };
+    }
+
     const files = await useDatabase<IFile[]>(async () => {
-      const filters: { eventId: string; userId?: string; } = {
-        eventId: eventId as string
-      }
-      if (userId && typeof userId === "string") {
-        filters.userId = userId;
-      }
       return FileModel.find(filters)
         .sort({ createdAt: -1 })
         .populate('userId')
