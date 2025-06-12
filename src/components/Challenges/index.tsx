@@ -1,31 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 import type { Challenge } from "./types";
 import styles from "./Challenges.module.css";
-import { Button } from "rsuite";
-
-const challenges: Challenge[] = [
-    {
-        id: "1",
-        title: "Primer Baile",
-        description: "Captura el momento más emotivo del primer baile de los novios.",
-        topic: "Baile",
-        deadline: "2025-06-10 22:00:00",
-    },
-    {
-        id: "2",
-        title: "Detalles del Vestido",
-        description: "Fotografía los detalles únicos del vestido de la novia.",
-        topic: "Vestido",
-        deadline: "2025-06-10 23:00:00",
-    },
-    {
-        id: "3",
-        title: "Emociones Familiares",
-        description: "Muestra las emociones genuinas de los familiares durante la ceremonia.",
-        topic: "Familia",
-        deadline: "2025-06-10 24:00:00",
-    },
-];
+import { Button, Loader } from "rsuite";
+import { getAllChallenges } from "./service";
 
 const renderCountdown = (deadline: string, now: Date): string => {
     const deadlineDate = new Date(deadline);
@@ -48,6 +25,8 @@ const ChallengesPage: React.FC = () => {
     const [now, setNow] = useState(new Date());
     const sliderRef = useRef<HTMLDivElement>(null);
 
+    const [challenges, setChallenges] = useState<Challenge[] | undefined | null>(undefined);
+
     useEffect(() => {
         const interval = setInterval(() => {
             setNow(new Date());
@@ -55,6 +34,49 @@ const ChallengesPage: React.FC = () => {
 
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        setChallenges(undefined)
+        getAllChallenges('683ef05ad8795795535d3b4f')
+            .then((challengesList) => {
+                if (challengesList) {
+                    setChallenges(challengesList);
+                } else {
+                    setChallenges(null);
+                }
+            })
+            .catch((error) => {
+                setChallenges(null);
+                console.error("Error fetching challenges:", error);
+            });
+    }, []);
+
+    const renderChallenges = () => {
+        if (challenges === undefined) {
+            return <Loader />
+        }
+
+        if (challenges === null) {
+            return <p className={styles.error}>No se han encontrado retos fotográficos.</p>;
+        }
+
+        return challenges.map((challenge) => (
+            <div
+                key={challenge.id}
+                className={styles.challengeCard}
+            >
+                <h2>{challenge.title}</h2>
+                <p>{challenge.description}</p>
+                <p>
+                    <strong>Topic:</strong> {challenge.topic}
+                </p>
+                <p>
+                    <strong>Quedan</strong> {renderCountdown(challenge.deadline, now)}
+                </p>
+                <Button appearance="ghost">Upload Photo</Button>
+            </div>
+        ))
+    }
 
     return (
         <div className={styles.container}>
@@ -64,22 +86,9 @@ const ChallengesPage: React.FC = () => {
             </p>
             <div className={styles.sliderWrapper}>
                 <div className={styles.challengesSlider} ref={sliderRef}>
-                    {challenges.map((challenge) => (
-                        <div
-                            key={challenge.id}
-                            className={styles.challengeCard}
-                        >
-                            <h2>{challenge.title}</h2>
-                            <p>{challenge.description}</p>
-                            <p>
-                                <strong>Topic:</strong> {challenge.topic}
-                            </p>
-                            <p>
-                                <strong>Quedan</strong> {renderCountdown(challenge.deadline, now)}
-                            </p>
-                            <Button appearance="ghost">Upload Photo</Button>
-                        </div>
-                    ))}
+                    {
+                        renderChallenges()
+                    }
                 </div>
             </div>
         </div>
