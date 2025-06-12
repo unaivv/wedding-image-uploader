@@ -27,3 +27,35 @@
         width: 60vw;
     }
 }
+
+.uploadUniqueImage {
+    width: 100%;
+    aspect-ratio: 1/1;
+    position: relative;
+    margin-top: 0.5em;
+
+    &>img {
+        width: 100%;
+        height: 100% !important;
+        object-fit: cover;
+        margin-bottom: 0 !important;
+        display: block;
+    }
+
+    .remove {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background-color: rgba(60, 60, 60, 0.8);
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        padding: 0 !important;
+    }
+}

@@ -7,7 +7,7 @@ import CloseIcon from '@rsuite/icons/Close';
 import CheckRoundIcon from '@rsuite/icons/CheckRound';
 import type { IUploadProps } from './types';
 
-const Upload = ({ onlyButton, extraParams = {} }: IUploadProps) => {
+const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUploadProps) => {
     const userEmail = auth.getUserEmail();
     const userName = auth.getUserName();
 
@@ -18,9 +18,6 @@ const Upload = ({ onlyButton, extraParams = {} }: IUploadProps) => {
 
     const renderUploadInterior = () => {
         if (onlyButton) {
-            if (files.length > 0) {
-                return <></>
-            }
             return <Button appearance="ghost" style={{ marginTop: 10 }}>
                 Selecciona tus foto!
             </Button>
@@ -127,14 +124,16 @@ const Upload = ({ onlyButton, extraParams = {} }: IUploadProps) => {
                 }}
                 onSuccess={(response, file) => {
                     setLoading(false);
-                    if (response && response.fileName) {
+                    if (response && response.files && response.files.length > 0) {
                         setFiles((prevFiles) => {
-                            return prevFiles.map((f) => {
+                            const newFiles = prevFiles.map((f) => {
                                 if (f.blobFile === file.blobFile) {
-                                    return { ...f, url: response.fileName };
+                                    return { ...file };
                                 }
                                 return f;
-                            });
+                            })
+                            onUpload(newFiles);
+                            return newFiles;
                         });
                     }
                 }}
@@ -144,7 +143,6 @@ const Upload = ({ onlyButton, extraParams = {} }: IUploadProps) => {
                 fileList={files}
             >
                 <div className={`${styles.uploadContainer} ${onlyButton ? styles.onlyButton : ''}`}>
-
                     {renderUploadInterior()}
                 </div>
             </Uploader>

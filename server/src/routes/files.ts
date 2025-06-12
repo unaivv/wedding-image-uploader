@@ -117,8 +117,8 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
         const fileDoc = new FileModel({
           fullSrc: cloudinaryFullImageUrl,
           compressedSrc: cloudinaryCompressedImageUrl,
-          eventId: body.eventId,
-          userId: body.userId
+          eventId: eventId,
+          userId: userId
         });
 
         const savedFile = await useDatabase<IFile>(async () => {
@@ -127,6 +127,23 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
         })
 
         if (challengeId) {
+          const challenge = await useDatabase(async () => {
+            return ChallengeModel.findById(challengeId)
+          });
+
+          if (!challenge) {
+            console.error("Challenge not found");
+            res.status(404).json({ error: "Challenge not found" });
+            return;
+          }
+          console.log(challenge.participants, userId)
+          const isParticipating = challenge.participants.some(participant => participant.user.toString() === body.userId);
+          if (isParticipating) {
+            console.error("User is already participating in this challenge");
+            res.status(400).json({ error: "User is already participating in this challenge" });
+            return;
+          }
+
           const updatedChallenge = await useDatabase(async () => {
             const updatedChallenge = await ChallengeModel.updateOne(
               { _id: challengeId },
@@ -142,6 +159,7 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
             ).exec();
             return updatedChallenge;
           })
+
           if (!updatedChallenge) {
             console.error("Error updating challenge with new participant");
             res.status(500).json({ error: "Failed to update challenge with new participant" });
