@@ -7,6 +7,7 @@ import type { FileType } from "rsuite/esm/Uploader";
 import { Image } from "rsuite";
 import { CloseIcon } from "yet-another-react-lightbox";
 import { auth } from "../../../utils/auth";
+import { deleteParticipation } from "./service";
 
 const Challenge = ({ challenge }: IChallengeProps) => {
     const [now, setNow] = useState(new Date());
@@ -39,7 +40,16 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                     className={styles.remove}
                     onClick={(e) => {
                         e.stopPropagation();
-                        alert('eliminar foto');
+                        const userId = auth.getUserId();
+                        if (userId) {
+                            deleteParticipation(challenge.id, userId)
+                                .then(() => {
+                                    setFile(null);
+                                })
+                                .catch((error) => {
+                                    console.error("Error deleting participation:", error);
+                                });
+                        }
                     }}
                 >
                     <CloseIcon fontSize={'16px'} />

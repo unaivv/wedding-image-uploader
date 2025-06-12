@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { useDatabase } from "../services/ddbb";
 import ChallengeModel from "../models/challenge";
+import FileModel from "../models/file";
 
 const router = Router();
 
@@ -35,6 +36,43 @@ router.get("/list", async (req: Request, res: Response) => {
     });
 
     res.json(challenges);
+});
+
+router.get("/delete-participant", async (req: Request, res: Response) => {
+    const { challengeId, userId } = req.query;
+    if (!challengeId || !userId) {
+        res.status(400).json({ error: "Challenge ID and User ID are required" });
+        return;
+    }
+
+    await useDatabase(async () => {
+        const challenge = await ChallengeModel.findById(challengeId).exec();
+        if (!challenge) {
+            res.status(404).json({ error: "Challenge not found" });
+            return;
+        }
+
+        const participant = challenge.participants.find(
+            (p: any) => p.user.toString() === userId
+        );
+        if (!participant) {
+            res.status(404).json({ error: "Participant not found" });
+            return;
+        }
+
+        const fileId = participant.file;
+
+        await ChallengeModel.updateOne(
+            { _id: challengeId },
+            { $pull: { participants: { user: userId } } }
+        ).exec();
+
+        if (fileId) {
+            await FileModel.deleteOne({ _id: fileId }).exec();
+        }
+    });
+
+    res.json({ message: "Participant and file removed successfully" });
 });
 
 export default router;

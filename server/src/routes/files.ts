@@ -235,6 +235,20 @@ router.get("/delete", async (req: Request, res: Response) => {
       await FileModel.deleteOne({ _id: fileId }).exec();
     });
 
+    //remove file from challenge if is a participant file
+    const challenge = await useDatabase(async () => {
+      return ChallengeModel.findOne({ "participants.file": fileId }).exec();
+    });
+
+    if (challenge) {
+      await useDatabase(async () => {
+        await ChallengeModel.updateOne(
+          { _id: challenge._id },
+          { $pull: { participants: { file: fileId } } }
+        ).exec();
+      });
+    }
+
     res.json({ message: "File deleted successfully" });
   } catch (error) {
     console.error("Error deleting file:", error);
