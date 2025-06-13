@@ -73,9 +73,6 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                     justifyContent: 'center',
                     alignItems: 'stretch',
                 }}
-                headers={{
-                    "ngrok-skip-browser-warning": "69420"
-                }}
                 autoUpload={false}
                 renderThumbnail={(file) => {
                     return (

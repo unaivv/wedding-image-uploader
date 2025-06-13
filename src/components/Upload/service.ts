@@ -1,10 +1,6 @@
 export const deleteFile = async (fileId: string): Promise<boolean> => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/delete?fileId=${fileId}`, {
-            headers: {
-                "ngrok-skip-browser-warning": "69420", //TODO: ONLY FOR DEV
-            }
-        });
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/delete?fileId=${fileId}`);
 
         if (!response.ok) {
             console.error('Failed to delete file:', response);
@@ -20,11 +16,7 @@ export const deleteFile = async (fileId: string): Promise<boolean> => {
 
 export const likeFile = async (fileId: string, userId: string): Promise<boolean> => {
     try {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/like?fileId=${fileId}&userId=${userId}`, {
-            headers: {
-                "ngrok-skip-browser-warning": "69420", //TODO: ONLY FOR DEV
-            }
-        });
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/like?fileId=${fileId}&userId=${userId}`);
 
         if (!response.ok) {
             console.error('Failed to like file:', response);

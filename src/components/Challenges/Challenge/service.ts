@@ -1,11 +1,7 @@
 export const deleteParticipation = async (challengeId: string, userId: string) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/challenge/delete-participant?challengeId=${challengeId}&userId=${userId}`;
 
-    const response = await fetch(url, {
-        headers: new Headers({
-            "ngrok-skip-browser-warning": "69420",
-        }),
-    });
+    const response = await fetch(url);
 
     if (!response.ok) {
         throw new Error('Failed to fetch photos');

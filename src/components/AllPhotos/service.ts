@@ -3,11 +3,7 @@ export const getAllPhotos = async (eventId: string, userId?: string) => {
     if (userId) {
         url += `&userId=${userId}`;
     }
-    const response = await fetch(url, {
-        headers: new Headers({
-            "ngrok-skip-browser-warning": "69420",
-        }),
-    });
+    const response = await fetch(url);
 
     if (!response.ok) {
         throw new Error('Failed to fetch photos');

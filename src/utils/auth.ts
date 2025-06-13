@@ -14,25 +14,25 @@ export const auth = {
         localStorage.removeItem(TOKEN_KEY);
     },
     getUserEmail() {
-        try{
+        try {
             const token = auth.getToken()
             if (!token) {
                 return null;
             }
             return JSON.parse(atob(token.split('.')[1])).email
-        }catch(e){
+        } catch (e) {
             console.error('Error parsing token:', e);
             return null;
         }
     },
     getUserName() {
-        try{
+        try {
             const token = auth.getToken()
             if (!token) {
                 return null;
             }
             return JSON.parse(atob(token.split('.')[1])).given_name
-        }catch(e){
+        } catch (e) {
             console.error('Error parsing token:', e);
             return null;
         }
@@ -44,12 +44,8 @@ export const auth = {
         return localStorage.getItem('user_id');
     },
     async login(token: string) {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/login?token=${token}`,{
-            headers:{
-                "ngrok-skip-browser-warning": "69420", //TODO: ONLY FOR DEV
-            }
-        });
-        if(!response.ok) {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/login?token=${token}`);
+        if (!response.ok) {
             console.error('Login failed:', response.statusText);
             return false
         }

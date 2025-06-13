@@ -1,11 +1,7 @@
 export const getAllChallenges = async (eventId: string) => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/challenge/list?eventId=${eventId}`
-    
-    const response = await fetch(url, {
-        headers: new Headers({
-            "ngrok-skip-browser-warning": "69420",
-        }),
-    });
+
+    const response = await fetch(url);
 
     if (!response.ok) {
         throw new Error('Failed to fetch photos');
