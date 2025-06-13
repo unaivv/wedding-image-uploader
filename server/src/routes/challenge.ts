@@ -9,7 +9,7 @@ router.get("/create", async (req: Request, res: Response) => {
 
     const newChallenge = new ChallengeModel({
         title: "Primer baile",
-        event: "683ef05ad8795795535d3b4f",
+        event: "684c7a1e6ceed1ce4c79c9af",
         description: "Captura el momento más emotivo del primer baile de los novios.",
         endDate: new Date(Date.now() + 4 * 60 * 60 * 1000),
         topic: "Baile",

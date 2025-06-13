@@ -12,7 +12,7 @@ const ChallengesPage: React.FC = () => {
 
     useEffect(() => {
         setChallenges(undefined)
-        getAllChallenges('683ef05ad8795795535d3b4f')
+        getAllChallenges('684c7a1e6ceed1ce4c79c9af')
             .then((challengesList) => {
                 if (challengesList) {
                     setChallenges(challengesList);

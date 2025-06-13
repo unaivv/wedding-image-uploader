@@ -29,7 +29,7 @@ const AllPhotos = () => {
         const userId = auth.getUserId()
         if (auth.isLoggedIn() && userId) {
             getAllPhotos(
-                '683ef05ad8795795535d3b4f',
+                '684c7a1e6ceed1ce4c79c9af',
                 seeAllFotos === 'true' ? undefined : userId
             )
                 .then((data: IPhotosFromBackend[]) => {

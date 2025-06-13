@@ -62,7 +62,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                 multiple={!onlyButton}
                 listType="picture"
                 data={{
-                    eventId: '683ef05ad8795795535d3b4f',
+                    eventId: '684c7a1e6ceed1ce4c79c9af',
                     userId: auth.getUserId(),
                     ...extraParams
                 }}
