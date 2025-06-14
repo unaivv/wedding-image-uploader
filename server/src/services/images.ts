@@ -6,7 +6,7 @@ export const compressImage = async (filePath: string) => {
 
     const imagenRedimensionada = await imagen
       .resize({ width: 400, height: 400 })
-      .webp({ lossless: true })
+      .webp({ lossless: true, quality: 70 })
       .toBuffer();
 
     const newUrlWebp = filePath.replace(/(\.\w+)$/, '-compressed.webp');
