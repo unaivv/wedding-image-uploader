@@ -24,13 +24,10 @@ const Photo = (
       .some((user) => (typeof user === "object" ? user._id : user) === (auth.getUserId() || ""))
   );
 
-  const likedUsers = ((photo as IPhoto).likedBy || []).map(
-    (user) => {
-      if (typeof user === "object") {
-        return user.fullName || user.name || user.email || 'User';
-      }
-      return user;
-    }
+  const [likes, setLikes] = useState<{ id: string, name: string }[]>(
+    ((photo as IPhoto).likedBy || [])
+      .filter((user) => typeof user === "object")
+      .map((user) => ({ id: user._id, name: user.name || user.email || 'User' }))
   );
 
   const handleDelete = (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
@@ -67,12 +64,17 @@ const Photo = (
               ...((photo as IPhoto).likedBy || []),
               { _id: userId } as IUser
             ];
+            setLikes(prevLikes => [
+              ...prevLikes,
+              { id: userId, name: auth.getUserName() || 'User' }
+            ]);
           }
         } else {
           (photo as IPhoto).likedBy = (photo as IPhoto).likedBy?.filter(user => {
             const userId = typeof user === "object" ? user._id : user;
             return userId !== auth.getUserId();
           });
+          setLikes(prevLikes => prevLikes.filter(like => like.id !== auth.getUserId()));
         }
       })
       .catch((error) => {
@@ -136,10 +138,10 @@ const Photo = (
               placement="top"
               trigger="click"
               speaker={<Tooltip onClick={(e) => e.stopPropagation()}>
-                {likedUsers.length > 0 ? (
-                  likedUsers.map((name, idx) => (
+                {likes.length > 0 ? (
+                  likes.map((like, idx) => (
                     <div key={idx} className={styles.likeUser} onClick={(e) => e.stopPropagation()}>
-                      {name}
+                      {like.name}
                     </div>
                   ))
                 ) : (
