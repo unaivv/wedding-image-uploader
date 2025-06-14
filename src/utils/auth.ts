@@ -26,6 +26,7 @@ export const auth = {
     logout() {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_ID_KEY);
+        window.location.href = `/login`;
     },
     getUserEmail() {
         try {
