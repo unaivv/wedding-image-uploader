@@ -1,4 +1,17 @@
+import { get } from "./fetch";
+
 const TOKEN_KEY = 'google_token';
+const USER_ID_KEY = 'user_id';
+
+export interface UserAuth {
+    createdAt: string
+    email: string
+    fullName: string
+    name: string
+    picture: string
+    updatedAt: string
+    _id: string
+}
 
 export const auth = {
     isLoggedIn(): boolean {
@@ -12,6 +25,7 @@ export const auth = {
     },
     logout() {
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_ID_KEY);
     },
     getUserEmail() {
         try {
@@ -38,24 +52,16 @@ export const auth = {
         }
     },
     setUserId(userId: string) {
-        localStorage.setItem('user_id', userId);
+        localStorage.setItem(USER_ID_KEY, userId);
     },
     getUserId(): string | null {
-        return localStorage.getItem('user_id');
+        return localStorage.getItem(USER_ID_KEY);
     },
     async login(token: string) {
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/user/login?token=${token}`);
-        if (!response.ok) {
-            console.error('Login failed:', response.statusText);
-            return false
-        }
-
-        const data = await response.json();
-        if (data.error) {
-            console.error('Login error:', data.error);
-            return false;
-        }
-        auth.setUserId(data._id);
+        const user = await get<UserAuth>({
+            url: `${import.meta.env.VITE_BACKEND_URL}/user/login?token=${token}`
+        });
+        auth.setUserId(user._id);
         auth.saveToken(token);
         return true;
     }

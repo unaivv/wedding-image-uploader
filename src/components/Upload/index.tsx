@@ -32,6 +32,10 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                 overflowWrap: 'break-word',
                 wordBreak: 'break-word',
                 whiteSpace: 'normal',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
             }}>
                 Haz clic o arrastra archivos a esta área para subirlos. Maximos archivos a la vez 10.
             </span><Button appearance="ghost" style={{ marginTop: 10 }}>
@@ -72,6 +76,32 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                     flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'stretch',
+                }}
+                headers={{
+                    userId: auth.getUserId() || '',
+                }}
+                onReupload={async (file) => {
+                    setLoading(true);
+                    try {
+                        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/upload`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                userId: auth.getUserId() || '',
+                            },
+                            body: JSON.stringify({
+                                fileKey: file.fileKey,
+                                eventId: extraParams.eventId,
+                            }),
+                        });
+                        const data = await response.json();
+                        setLoading(false);
+                        return data;
+                    } catch (error) {
+                        setLoading(false);
+                        console.error('Error reuploading file:', error);
+                        throw error;
+                    }
                 }}
                 autoUpload={false}
                 renderThumbnail={(file) => {

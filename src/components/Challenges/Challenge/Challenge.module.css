@@ -24,13 +24,15 @@
 
 @media (max-width: 600px) {
     .challengeCard {
+        max-width: 60vw;
         width: 60vw;
+        min-width: 60vw;
     }
 }
 
 .uploadUniqueImage {
     width: 100%;
-    aspect-ratio: 1/1;
+    max-height: 200px;
     position: relative;
     margin-top: 0.5em;
 

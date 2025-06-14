@@ -2,10 +2,11 @@ import { Router, Request, Response } from "express";
 import { useDatabase } from "../services/ddbb";
 import ChallengeModel from "../models/challenge";
 import FileModel from "../models/file";
+import { authenticateUser } from "../services/auth";
 
 const router = Router();
 
-router.get("/create", async (req: Request, res: Response) => {
+router.get("/create", authenticateUser, async (req: Request, res: Response) => {
 
     const newChallenge = new ChallengeModel({
         title: "Primer baile",
@@ -25,7 +26,7 @@ router.get("/create", async (req: Request, res: Response) => {
     res.json(newChallenge);
 });
 
-router.get("/list", async (req: Request, res: Response) => {
+router.get("/list", authenticateUser, async (req: Request, res: Response) => {
     const { eventId } = req.query;
     if (!eventId) {
         res.status(400).json({ error: "Event ID is required" });
@@ -38,7 +39,7 @@ router.get("/list", async (req: Request, res: Response) => {
     res.json(challenges);
 });
 
-router.get("/delete-participant", async (req: Request, res: Response) => {
+router.get("/delete-participant", authenticateUser, async (req: Request, res: Response) => {
     const { challengeId, userId } = req.query;
     if (!challengeId || !userId) {
         res.status(400).json({ error: "Challenge ID and User ID are required" });

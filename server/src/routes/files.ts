@@ -7,12 +7,13 @@ import FileModel, { IFile } from "../models/file";
 import { deleteFileFromCloudinary, uploadFileToCloudinary } from "../services/useCloudinary";
 import { compressImage, convertToWebp } from "../services/images";
 import ChallengeModel from "../models/challenge";
+import { authenticateUser } from "../services/auth";
 
 const router = Router();
 const folder = path.join(__dirname, '../buckets/images/');
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.get("/get-all", async (req: Request, res: Response) => {
+router.get("/get-all", authenticateUser, async (req: Request, res: Response) => {
   const params = req.query;
 
   if (!params) {
@@ -63,7 +64,7 @@ router.get("/get-all", async (req: Request, res: Response) => {
   }
 });
 
-router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (req: Request, res: Response): Promise<void> => {
+router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount: 10 }]), async (req: Request, res: Response): Promise<void> => {
   const body = req.body;
 
   if (!body) {
@@ -207,7 +208,7 @@ router.post("/upload", upload.fields([{ name: 'file', maxCount: 10 }]), async (r
   res.json({ message: "Files uploaded successfully", files: uploadResults });
 });
 
-router.get("/delete", async (req: Request, res: Response) => {
+router.get("/delete", authenticateUser, async (req: Request, res: Response) => {
   const params = req.query;
 
   if (!params) {
@@ -273,7 +274,7 @@ router.get("/delete", async (req: Request, res: Response) => {
   }
 })
 
-router.get('/like', async (req: Request, res: Response) => {
+router.get('/like', authenticateUser, async (req: Request, res: Response) => {
   const params = req.query;
   if (!params) {
     res.status(400).json({ error: "Request params is required" });

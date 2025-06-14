@@ -25,6 +25,7 @@ export interface IPhotosFromBackend {
     fullSrc: string
     updatedAt: string
     id: string
+    _id?: string
     userId: IUser
     likedBy: IUser[]
 }
