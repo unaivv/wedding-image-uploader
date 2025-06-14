@@ -7,10 +7,9 @@ export const getAllPhotos = async (eventId: string, userId?: string) => {
         url += `&userId=${userId}`;
     }
     const allPhotos = await get<IPhotosFromBackend[]>({ url, auth: true });
-    const photos = allPhotos.map((photo) => {
-        const newPhoto = { ...photo, id: photo._id } as { _id?: string; id: string };
-        delete newPhoto._id;
-        return newPhoto;
+    const photos: IPhotosFromBackend[] = allPhotos.map((photo) => {
+        const { _id, ...rest } = photo;
+        return { ...rest, id: _id } as IPhotosFromBackend;
     });
 
     return photos;
