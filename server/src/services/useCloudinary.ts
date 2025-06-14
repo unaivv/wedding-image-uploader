@@ -12,6 +12,12 @@ export const uploadFileToCloudinary = async (filePath: string, folder = ''): Pro
             folder: folder,
             resource_type: 'auto',
             timeout: 120000
+        }, (err, result) => {
+            if (err) {
+                console.error('Cloudinary upload error:', err);
+                return false;
+            }
+            return result;
         });
         return result.secure_url || false;
     } catch (error) {
