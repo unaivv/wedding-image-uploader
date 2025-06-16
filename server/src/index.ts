@@ -10,7 +10,13 @@ import 'dotenv/config'
 const app = express();
 const port = "3000";
 
-app.use(cors()) //TODO: delete this in production, only for development purposes
+if (process.env.NODE_ENV === "production") {
+  app.use(cors({
+    origin: "https://wedding.unaividal.com"
+  }));
+} else {
+  app.use(cors()); //TODO: delete this in production, only for development purposes
+}
 
 app.use("/files", files);
 app.use('/event', events);
