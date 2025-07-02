@@ -68,6 +68,33 @@ const Challenge = ({ challenge }: IChallengeProps) => {
         )
     }
 
+    if (challenge && challenge.winner) {
+        const winnerParticipant = challenge.winner
+            ? challenge.participants.find(
+                p => p.user._id === challenge.winner!._id
+            )
+            : undefined;
+        const winnerFile = winnerParticipant?.file;
+        return (
+            <div className={styles.challengeCard}>
+                <h2>{challenge.title}</h2>
+                <p>{challenge.description}</p>
+                <div style={{ margin: "16px 0" }}>
+                    <strong>Ganador🥇:</strong> {challenge.winner.name}
+                </div>
+                {winnerFile && (
+                    <div className={styles.uploadUniqueImage}>
+                        <Image
+                            src={winnerFile.compressedSrc}
+                            alt={winnerFile.id}
+                            style={{ width: '100%', height: 'auto', marginBottom: 10 }}
+                        />
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div
             key={challenge.id}

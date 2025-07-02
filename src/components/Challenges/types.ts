@@ -4,7 +4,6 @@ export interface IParticipant {
     file: IPhotosFromBackend
     user: IUser;
     upladedAt: Date;
-
 }
 
 export type Challenge = {
@@ -15,4 +14,5 @@ export type Challenge = {
     topic: string;
     endDate: string;
     participants: IParticipant[];
+    winner: IUser | null;
 };

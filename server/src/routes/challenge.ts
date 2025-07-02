@@ -33,7 +33,11 @@ router.get("/list", authenticateUser, async (req: Request, res: Response) => {
         return;
     }
     const challenges = await useDatabase(async () => {
-        return await ChallengeModel.find().populate("participants.user").populate("participants.file").exec();
+        return await ChallengeModel.find()
+            .populate("participants.user")
+            .populate("participants.file")
+            .populate("winner")
+            .exec();
     });
 
     res.json(challenges);
