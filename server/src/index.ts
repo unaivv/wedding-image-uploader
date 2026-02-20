@@ -12,7 +12,12 @@ const port = "3000";
 
 if (process.env.NODE_ENV === "production") {
   app.use(cors({
-    origin: "https://wedding.unaividal.com"
+    origin: [
+      "https://wedding.unaividal.com",
+      "https://backend.unaividal.com",
+      "https://unaividal.github.io"
+    ],
+    credentials: true
   }));
 } else {
   app.use(cors()); //TODO: delete this in production, only for development purposes
