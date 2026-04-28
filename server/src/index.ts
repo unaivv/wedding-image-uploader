@@ -1,6 +1,6 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
-import files from "./routes/files";
+import { router as files } from "./routes/files";
 import events from "./routes/event";
 import users from "./routes/user";
 import challenges from "./routes/challenge";
@@ -9,7 +9,7 @@ import cors from "cors";
 import 'dotenv/config'
 
 const app = express();
-const port = "3000";
+const port = process.env.PORT || "3000";
 
 if (process.env.NODE_ENV === "production") {
   app.use(cors({

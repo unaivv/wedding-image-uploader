@@ -1,18 +1,18 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Challenge } from "./types";
 import styles from "./Challenges.module.css";
-import { Loader } from "rsuite";
+import { Placeholder } from "rsuite";
 import { getAllChallenges } from "./service";
-import ChallengeComponent from "./Challenge";
+import { Challenge as ChallengeComponent } from "./Challenge";
 
-const ChallengesPage: React.FC = () => {
+const ChallengesPage = () => {
     const sliderRef = useRef<HTMLDivElement>(null);
 
     const [challenges, setChallenges] = useState<Challenge[] | undefined | null>(undefined);
 
     useEffect(() => {
         setChallenges(undefined)
-        getAllChallenges('684c7a1e6ceed1ce4c79c9af')
+        getAllChallenges(import.meta.env.VITE_EVENT_ID)
             .then((challengesList) => {
                 if (challengesList) {
                     setChallenges(challengesList);
@@ -20,15 +20,18 @@ const ChallengesPage: React.FC = () => {
                     setChallenges(null);
                 }
             })
-            .catch((error) => {
-                setChallenges(null);
-                console.error("Error fetching challenges:", error);
-            });
+            .catch(() => setChallenges(null));
     }, []);
 
     const renderChallenges = () => {
         if (challenges === undefined) {
-            return <Loader />
+            return (
+                <div style={{ display: 'flex', gap: 12 }}>
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <Placeholder.Graph key={i} active style={{ width: 220, height: 280, borderRadius: 8 }} />
+                    ))}
+                </div>
+            );
         }
 
         if (challenges === null) {
@@ -55,4 +58,4 @@ const ChallengesPage: React.FC = () => {
     );
 };
 
-export default ChallengesPage;
+export { ChallengesPage };

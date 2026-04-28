@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import Upload from "../components/Upload";
+import { Upload } from "../components/Upload";
 import { Button } from "rsuite";
 
 const UploadPage = () => {
@@ -16,4 +16,4 @@ const UploadPage = () => {
     );
 }
 
-export default UploadPage;
+export { UploadPage };

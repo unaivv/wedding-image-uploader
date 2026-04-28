@@ -26,21 +26,21 @@
 
 ## Tier 2 — Alta prioridad (UX roto sin esto)
 
-- [ ] **T2-1: Paginación / infinite scroll en la galería**
+- [x] **T2-1: Paginación / infinite scroll en la galería**
   - Endpoint `GET /files/get-all` con params `page` + `limit` (ej. 20 fotos por página)
   - Frontend: Intersection Observer para cargar más al llegar al final
   - RSuite no tiene infinite scroll nativo; implementar con hook `useIntersectionObserver`
 
-- [ ] **T2-2: Toast notifications para upload y acciones**
+- [x] **T2-2: Toast notifications para upload y acciones**
   - Usar `toaster` + `useToaster` de RSuite
   - Notificar éxito/error en upload, delete, like
   - Reemplazar el `alert()` en el login por toast
 
-- [ ] **T2-3: Skeleton screens durante carga**
+- [x] **T2-3: Skeleton screens durante carga**
   - Usar `Placeholder.Graph` de RSuite mientras cargan fotos
   - Aplicar en `AllPhotos` y en `Challenges`
 
-- [ ] **T2-4: Event ID dinámico**
+- [x] **T2-4: Event ID dinámico**
   - Sacar `684c7a1e6ceed1ce4c79c9af` hardcodeado a `VITE_EVENT_ID` en `.env`
   - Actualizar todos los componentes que lo referencian
 

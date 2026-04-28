@@ -2,14 +2,15 @@ import type { IChallengeProps } from "./types";
 import styles from "./Challenge.module.css";
 import { renderCountdown } from "./util";
 import { useEffect, useState } from "react";
-import Upload from "../../Upload";
+import { Upload } from "../../Upload";
 import type { FileType } from "rsuite/esm/Uploader";
-import { Image } from "rsuite";
+import { Image, Message, useToaster } from "rsuite";
 import { CloseIcon } from "yet-another-react-lightbox";
 import { auth } from "../../../utils/auth";
 import { deleteParticipation } from "./service";
 
 const Challenge = ({ challenge }: IChallengeProps) => {
+    const toaster = useToaster();
     const [now, setNow] = useState(new Date());
     const [file, setFile] = useState<FileType | null>(() => {
         const backendFile = challenge.participants.find(participant => participant.user._id === auth.getUserId())?.file || null;
@@ -23,10 +24,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     });
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setNow(new Date());
-        }, 60000);
-
+        const interval = setInterval(() => setNow(new Date()), 60000);
         return () => clearInterval(interval);
     }, []);
 
@@ -43,11 +41,12 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                         const userId = auth.getUserId();
                         if (userId) {
                             deleteParticipation(challenge.id, userId)
-                                .then(() => {
-                                    setFile(null);
-                                })
-                                .catch((error) => {
-                                    console.error("Error deleting participation:", error);
+                                .then(() => setFile(null))
+                                .catch(() => {
+                                    toaster.push(
+                                        <Message type="error" showIcon closable>No se pudo retirar la participación</Message>,
+                                        { placement: 'topEnd' }
+                                    );
                                 });
                         }
                     }}
@@ -62,18 +61,15 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                                 ? file.blobFile
                                 : file.url
                     }
-                    alt={file.name} style={{ width: '100%', height: 'auto', marginBottom: 10 }}
+                    alt={file.name}
+                    style={{ width: '100%', height: 'auto', marginBottom: 10 }}
                 />
             </div>
-        )
-    }
+        );
+    };
 
-    if (challenge && challenge.winner) {
-        const winnerParticipant = challenge.winner
-            ? challenge.participants.find(
-                p => p.user._id === challenge.winner!._id
-            )
-            : undefined;
+    if (challenge?.winner) {
+        const winnerParticipant = challenge.participants.find(p => p.user._id === challenge.winner!._id);
         const winnerFile = winnerParticipant?.file;
         return (
             <div className={styles.challengeCard}>
@@ -84,11 +80,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                 </div>
                 {winnerFile && (
                     <div className={styles.uploadUniqueImage}>
-                        <Image
-                            src={winnerFile.compressedSrc}
-                            alt={winnerFile.id}
-                            style={{ width: '100%', height: 'auto', marginBottom: 10 }}
-                        />
+                        <Image src={winnerFile.compressedSrc} alt={winnerFile.id} style={{ width: '100%', height: 'auto', marginBottom: 10 }} />
                     </div>
                 )}
             </div>
@@ -96,39 +88,26 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     }
 
     return (
-        <div
-            key={challenge.id}
-            className={styles.challengeCard}
-        >
+        <div key={challenge.id} className={styles.challengeCard}>
             <div>
                 <h2>{challenge.title}</h2>
                 <p>{challenge.description}</p>
-                <p>
-                    <strong>Topic:</strong> {challenge.topic}
-                </p>
-                <p>
-                    <strong>Quedan</strong> {renderCountdown(challenge.endDate, now)}
-                </p>
+                <p><strong>Topic:</strong> {challenge.topic}</p>
+                <p><strong>Quedan</strong> {renderCountdown(challenge.endDate, now)}</p>
             </div>
-            {
-                file
-                    ? renderFile()
-                    : <Upload
-                        onlyButton
-                        extraParams={{
-                            challengeId: challenge.id
-                        }}
-                        onUpload={(files) => {
-                            console.log(files)
-                            if (files.length === 0) {
-                                return;
-                            }
-                            setFile(files[0]);
-                        }}
-                    />
+            {file
+                ? renderFile()
+                : <Upload
+                    onlyButton
+                    extraParams={{ challengeId: challenge.id }}
+                    onUpload={(files) => {
+                        if (files.length === 0) return;
+                        setFile(files[0]);
+                    }}
+                />
             }
         </div>
     );
-}
+};
 
-export default Challenge;
+export { Challenge };

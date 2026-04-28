@@ -1,5 +1,5 @@
-import AllPhotos from "../components/AllPhotos";
-import Challenges from "../components/Challenges";
+import { AllPhotos } from "../components/AllPhotos";
+import { ChallengesPage as Challenges } from "../components/Challenges";
 
 const HomePage = () => {
     return (
@@ -11,4 +11,4 @@ const HomePage = () => {
     );
 }
 
-export default HomePage;
+export { HomePage };

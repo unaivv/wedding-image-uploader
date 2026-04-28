@@ -10,6 +10,7 @@ import { deleteFileFromCloudinary, uploadFileToCloudinary } from "../services/us
 import { compressImage, convertToWebp } from "../services/images";
 import ChallengeModel, { IChallenge } from "../models/challenge";
 import { authenticateUser } from "../services/auth";
+import { logger } from "../services/logger";
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -31,17 +32,17 @@ const upload = multer({
 type Participant = IChallenge['participants'][number];
 
 router.get("/get-all", authenticateUser, async (req: Request, res: Response) => {
-  const params = req.query;
+  const { eventId, userId, page, limit } = req.query;
 
-  if (!params) {
-    res.status(400).json({ error: "Request params is required" });
-    return;
-  }
-  const { eventId, userId } = params;
   if (!eventId) {
     res.status(400).json({ error: "Missing required field: eventId" });
     return;
   }
+
+  const pageNum = Math.max(1, parseInt(page as string) || 1);
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit as string) || 20));
+  const skip = (pageNum - 1) * limitNum;
+
   try {
     const challengeFiles = await useDatabase<string[]>(async () => {
       const challenges = await ChallengeModel.find({}, { "participants.file": 1 }).lean().exec();
@@ -59,44 +60,32 @@ router.get("/get-all", authenticateUser, async (req: Request, res: Response) => 
     const filters: { eventId: string; userId?: string; _id?: { $nin: string[] } } = {
       eventId: eventId as string
     };
-    if (userId && typeof userId === "string") {
-      filters.userId = userId;
-    }
-    if (challengeFiles.length > 0) {
-      filters._id = { $nin: challengeFiles };
-    }
+    if (userId && typeof userId === "string") filters.userId = userId;
+    if (challengeFiles.length > 0) filters._id = { $nin: challengeFiles };
 
-    const files = await useDatabase<IFile[]>(async () => {
-      return FileModel.find(filters)
-        .sort({ createdAt: -1 })
-        .populate('userId')
-        .populate('likedBy')
-        .exec();
-    });
+    const [files, total] = await useDatabase<[IFile[], number]>(async () => Promise.all([
+      FileModel.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limitNum).populate('userId').populate('likedBy').exec(),
+      FileModel.countDocuments(filters).exec(),
+    ]));
 
-    res.json(files);
-  } catch (error) {
-    console.error("Error fetching files:", error);
+    res.json({ files, total, page: pageNum, limit: limitNum, hasMore: skip + files.length < total });
+  } catch (err) {
+    logger.error("get-all failed", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount: 10 }]), async (req: Request, res: Response): Promise<void> => {
   const body = req.body;
-
-  if (!body) {
-    return;
-  }
+  if (!body) return;
 
   const { eventId, userId, challengeId } = body;
-
   if (!eventId || !userId) {
     res.status(400).json({ error: "Missing required fields: eventId or userId" });
     return;
   }
 
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-
   if (!files || !files["file"] || files["file"].length === 0) {
     res.status(400).json({ error: "No file uploaded" });
     return;
@@ -113,142 +102,73 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
     }
 
     const extension = path.extname(file.originalname);
-    const localPath = `${eventId}/${userId}-${Date.now()}${extension}`
-    const filePath = `${folder}${localPath}`;
+    const filePath = `${folder}${eventId}/${userId}-${Date.now()}${extension}`;
     const fileSaved = saveFile(filePath, file.buffer);
 
     const webpImage = await convertToWebp(filePath);
+    if (!webpImage) { res.status(500).json({ error: "Failed to convert image to WebP" }); return; }
 
-    if (!webpImage) {
-      res.status(500).json({ error: "Failed to convert image to WebP" });
-      return;
-    }
+    const cloudinaryFullImageUrl = await uploadFileToCloudinary(webpImage, eventId);
+    if (!cloudinaryFullImageUrl) { res.status(500).json({ error: "Failed to upload file to Cloudinary" }); return; }
 
-    const cloudinaryFullImageUrl = await uploadFileToCloudinary(webpImage, eventId)
+    const imageCompressed = await compressImage(filePath);
+    if (!imageCompressed) { res.status(500).json({ error: "Failed to compress image" }); return; }
 
-    if (!cloudinaryFullImageUrl) {
-      res.status(500).json({ error: "Failed to upload file to Cloudinary" });
-      return;
-    }
+    const cloudinaryCompressedImageUrl = await uploadFileToCloudinary(imageCompressed, eventId);
+    if (!cloudinaryCompressedImageUrl) { res.status(500).json({ error: "Failed to upload compressed image to Cloudinary" }); return; }
 
-    const imageCompressed = await compressImage(filePath)
+    deleteFile(filePath);
+    deleteFile(imageCompressed);
+    deleteFile(webpImage);
 
-    if (!imageCompressed) {
-      res.status(500).json({ error: "Failed to compress image" });
-      return;
-    }
-
-    const cloudinaryCompressedImageUrl = await uploadFileToCloudinary(imageCompressed, eventId)
-
-    if (!cloudinaryCompressedImageUrl) {
-      res.status(500).json({ error: "Failed to upload compressed image to Cloudinary" });
-      return;
-    }
-
-    deleteFile(filePath)
-    deleteFile(imageCompressed)
-    deleteFile(webpImage)
-
-    let dbId: string | undefined = undefined;
+    let dbId: string | undefined;
     if (fileSaved && cloudinaryFullImageUrl) {
       try {
-        const fileDoc = new FileModel({
-          fullSrc: cloudinaryFullImageUrl,
-          compressedSrc: cloudinaryCompressedImageUrl,
-          eventId: eventId,
-          userId: userId
-        });
-
-        const savedFile = await useDatabase<IFile>(async () => {
-          const document = await fileDoc.save();
-          return document
-        })
+        const fileDoc = new FileModel({ fullSrc: cloudinaryFullImageUrl, compressedSrc: cloudinaryCompressedImageUrl, eventId, userId });
+        const savedFile = await useDatabase<IFile>(() => fileDoc.save());
 
         if (challengeId) {
-          const challenge = await useDatabase(async () => {
-            return ChallengeModel.findById(challengeId)
-          });
+          const challenge = await useDatabase(() => ChallengeModel.findById(challengeId));
+          if (!challenge) { res.status(404).json({ error: "Challenge not found" }); return; }
 
-          if (!challenge) {
-            res.status(404).json({ error: "Challenge not found" });
-            return;
-          }
-
-          const isParticipating = challenge.participants.some(
-            (p: Participant) => p.user.toString() === body.userId
-          );
-          if (isParticipating) {
+          if (challenge.participants.some((p: Participant) => p.user.toString() === userId)) {
             res.status(400).json({ error: "User is already participating in this challenge" });
             return;
           }
 
-          const updatedChallenge = await useDatabase(async () => {
-            const updatedChallenge = await ChallengeModel.updateOne(
-              { _id: challengeId },
-              {
-                $push: {
-                  participants: {
-                    user: body.userId,
-                    file: savedFile.id,
-                    uploadedAt: new Date()
-                  }
-                }
-              }
-            ).exec();
-            return updatedChallenge;
-          })
+          const updated = await useDatabase(() => ChallengeModel.updateOne(
+            { _id: challengeId },
+            { $push: { participants: { user: userId, file: savedFile.id, uploadedAt: new Date() } } }
+          ).exec());
 
-          if (!updatedChallenge) {
-            res.status(500).json({ error: "Failed to update challenge with new participant" });
-            return;
-          }
+          if (!updated) { res.status(500).json({ error: "Failed to update challenge with new participant" }); return; }
         }
 
         dbId = savedFile.id;
       } catch (err) {
-        console.error("Error saving file info to DB:", err);
+        logger.error("DB save failed during upload", err);
+        res.status(500).json({ error: "Failed to save file metadata" });
+        return;
       }
     }
 
-    uploadResults.push({
-      fileName: file.originalname,
-      success: !!fileSaved && !!dbId,
-      dbId
-    });
+    uploadResults.push({ fileName: file.originalname, success: !!fileSaved && !!dbId, dbId });
   }
 
   const failed = uploadResults.filter(r => !r.success);
-
-  if (failed.length > 0) {
-    res.status(500).json({ error: "Failed to save some files", details: failed });
-    return;
-  }
+  if (failed.length > 0) { res.status(500).json({ error: "Failed to save some files", details: failed }); return; }
 
   res.json({ message: "Files uploaded successfully", files: uploadResults });
 });
 
 router.get("/delete", authenticateUser, async (req: Request, res: Response) => {
-  const params = req.query;
-
-  if (!params) {
-    res.status(400).json({ error: "Request params is required" });
-    return;
-  }
-  const { fileId } = params;
-  if (!fileId) {
-    res.status(400).json({ error: "Missing required field: fileId" });
-    return;
-  }
+  const { fileId } = req.query;
+  if (!fileId) { res.status(400).json({ error: "Missing required field: fileId" }); return; }
 
   try {
-    const file = await useDatabase<IFile | null>(async () => {
-      return FileModel.findById(fileId).exec();
-    });
+    const file = await useDatabase<IFile | null>(() => FileModel.findById(fileId).exec());
+    if (!file) { res.status(404).json({ error: "File not found" }); return; }
 
-    if (!file) {
-      res.status(404).json({ error: "File not found" });
-      return;
-    }
     const cloudinaryFullId = file.fullSrc.split('/').pop()?.split('.')[0];
     const cloudinaryCompressedId = file.compressedSrc.split('/').pop()?.split('.')[0];
     if (!cloudinaryCompressedId || !cloudinaryFullId) {
@@ -256,82 +176,52 @@ router.get("/delete", authenticateUser, async (req: Request, res: Response) => {
       return;
     }
 
-    const deletedFIleInCloudinary = deleteFileFromCloudinary(cloudinaryFullId);
-    if (!deletedFIleInCloudinary) {
+    const [deletedFull, deletedCompressed] = await Promise.all([
+      deleteFileFromCloudinary(cloudinaryFullId),
+      deleteFileFromCloudinary(cloudinaryCompressedId),
+    ]);
+
+    if (!deletedFull || !deletedCompressed) {
       res.status(500).json({ error: "Failed to delete file from Cloudinary" });
       return;
     }
 
-    const deletedCompressedFileInCloudinary = deleteFileFromCloudinary(cloudinaryCompressedId);
-    if (!deletedCompressedFileInCloudinary) {
-      res.status(500).json({ error: "Failed to delete compressed file from Cloudinary" });
-      return;
-    }
+    await useDatabase(() => FileModel.deleteOne({ _id: fileId }).exec());
 
-    await useDatabase(async () => {
-      await FileModel.deleteOne({ _id: fileId }).exec();
-    });
-
-    const challenge = await useDatabase(async () => {
-      return ChallengeModel.findOne({ "participants.file": fileId }).exec();
-    });
-
+    const challenge = await useDatabase(() => ChallengeModel.findOne({ "participants.file": fileId }).exec());
     if (challenge) {
-      await useDatabase(async () => {
-        await ChallengeModel.updateOne(
-          { _id: challenge._id },
-          { $pull: { participants: { file: fileId } } }
-        ).exec();
-      });
+      await useDatabase(() => ChallengeModel.updateOne({ _id: challenge._id }, { $pull: { participants: { file: fileId } } }).exec());
     }
 
     res.json({ message: "File deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting file:", error);
+  } catch (err) {
+    logger.error("delete failed", err);
     res.status(500).json({ error: "Internal server error" });
   }
-})
+});
 
 router.get('/like', authenticateUser, async (req: Request, res: Response) => {
-  const params = req.query;
-  if (!params) {
-    res.status(400).json({ error: "Request params is required" });
-    return;
-  }
-  const { fileId, userId } = params;
-  if (!fileId || !userId) {
-    res.status(400).json({ error: "Missing required fields: fileId or userId" });
-    return;
-  }
+  const { fileId, userId } = req.query;
+  if (!fileId || !userId) { res.status(400).json({ error: "Missing required fields: fileId or userId" }); return; }
+
   try {
-    const file = await useDatabase<IFile | null>(async () => {
-      return FileModel.findById(fileId).exec();
-    });
-    if (!file) {
-      res.status(404).json({ error: "File not found" });
-      return;
-    }
+    const file = await useDatabase<IFile | null>(() => FileModel.findById(fileId).exec());
+    if (!file) { res.status(404).json({ error: "File not found" }); return; }
+
     const likedBy = file.likedBy || [];
     const userObjectId = new mongoose.Types.ObjectId(userId as string);
+    const alreadyLiked = likedBy.some((id: mongoose.Types.ObjectId) => id.equals(userObjectId));
 
-    if (likedBy.some((id: mongoose.Types.ObjectId) => id.equals(userObjectId))) {
-      await useDatabase(async () => {
-        file.likedBy = likedBy.filter((id: mongoose.Types.ObjectId) => !id.equals(userObjectId));
-        await file.save();
-      });
-      res.json({ message: "Like removed", liked: false });
-    } else {
-      await useDatabase(async () => {
-        if (!file.likedBy) {
-          file.likedBy = [];
-        }
-        file.likedBy.push(userObjectId);
-        await file.save();
-      });
-      res.json({ message: "File liked", liked: true });
-    }
-  } catch (error) {
-    console.error("Error liking file:", error);
+    await useDatabase(async () => {
+      file.likedBy = alreadyLiked
+        ? likedBy.filter((id: mongoose.Types.ObjectId) => !id.equals(userObjectId))
+        : [...likedBy, userObjectId];
+      await file.save();
+    });
+
+    res.json({ message: alreadyLiked ? "Like removed" : "File liked", liked: !alreadyLiked });
+  } catch (err) {
+    logger.error("like failed", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -348,4 +238,4 @@ router.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
     next(err);
 });
 
-export default router;
+export { router };
