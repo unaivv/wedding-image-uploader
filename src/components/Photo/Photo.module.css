@@ -86,6 +86,39 @@
     color: white
 }
 
+.likeButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 1em;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+        opacity: 0.8;
+    }
+}
+
+.liked {
+    color: #e0245e;
+}
+
+.likeCount {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.85em;
+    padding: 0;
+    color: inherit;
+}
+
 :global(.rs-modal-title){
     line-height: 1.5em !important;
 }

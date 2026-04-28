@@ -1,11 +1,12 @@
 import { type RenderImageContext, type RenderImageProps } from "react-photo-album";
 import { Image, Loader, Message, Tooltip, Whisper, useToaster } from "rsuite";
-import type { IPhoto, IUser } from "../AllPhotos/types";
+import type { IPhoto } from "../AllPhotos/types";
 import styles from "./Photo.module.css";
 import CloseIcon from '@rsuite/icons/Close';
 import { deleteFile, likeFile } from "../Upload/service";
 import { useState, useRef } from "react";
 import { auth } from "../../utils/auth";
+import { cn } from "../../utils/cn";
 import ArrowDownLineIcon from '@rsuite/icons/ArrowDownLine';
 
 interface PhotoComponentProps {
@@ -37,7 +38,7 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
             .map((user) => ({ id: user._id, name: user.name || user.email || 'User' }))
     );
 
-    const handleDelete = (e: React.MouseEvent<HTMLSpanElement>) => {
+    const handleDelete = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         if (loading || !canDelete) return;
         setLoading(true);
@@ -56,7 +57,8 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                     { placement: 'topEnd' }
                 );
             })
-            .catch(() => {
+            .catch((err: unknown) => {
+                console.error('delete photo failed', err);
                 toaster.push(
                     <Message type="error" showIcon closable>Error al eliminar la foto</Message>,
                     { placement: 'topEnd' }
@@ -65,7 +67,7 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
             .finally(() => setLoading(false));
     };
 
-    const handleLike = (e: React.MouseEvent<HTMLSpanElement> | React.TouchEvent<HTMLSpanElement>) => {
+    const handleLike = (e: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         if (isHolding.current) return;
         likeFile((photo as IPhoto).id || "", auth.getUserId() || "")
@@ -78,7 +80,8 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                     setLikes(prev => prev.filter(like => like.id !== userId));
                 }
             })
-            .catch(() => {
+            .catch((err: unknown) => {
+                console.error('like failed', err);
                 toaster.push(
                     <Message type="error" showIcon closable>Error al procesar el me gusta</Message>,
                     { placement: 'topEnd' }
@@ -94,9 +97,9 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                 </div>
             )}
             {canDelete && (
-                <span onClick={handleDelete} className={styles.removeButton}>
+                <button type="button" onClick={handleDelete} className={styles.removeButton}>
                     <CloseIcon fontSize={'1em'} color="white" />
-                </span>
+                </button>
             )}
             <Image
                 src={photo.src}
@@ -113,7 +116,11 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                     <span>{userName?.split('@')[0]}</span>
                 </div>
                 <div className={styles.actions} style={{ position: "relative" }}>
-                    <span className={`${styles.likeButton} ${liked ? styles.liked : ''}`} onClick={handleLike}>
+                    <button
+                        type="button"
+                        className={cn(styles.likeButton, liked && styles.liked)}
+                        onClick={handleLike}
+                    >
                         {liked ? '❤️' : '🤍'}{' '}
                         <Whisper
                             placement="top"
@@ -124,16 +131,16 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                                         ? likes.map((like, idx) => (
                                             <div key={idx} className={styles.likeUser} onClick={(e) => e.stopPropagation()}>{like.name}</div>
                                         ))
-                                        : <div>No hay usuarios que le gusten</div>
+                                        : <div>No hay usuarios que les guste</div>
                                     }
                                 </Tooltip>
                             }
                         >
-                            <span onClick={(e) => e.stopPropagation()}>
+                            <button type="button" onClick={(e) => e.stopPropagation()} className={styles.likeCount}>
                                 {likes.length}<ArrowDownLineIcon />
-                            </span>
+                            </button>
                         </Whisper>
-                    </span>
+                    </button>
                 </div>
             </div>
         </div>
