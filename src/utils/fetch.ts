@@ -18,6 +18,7 @@ const fetchService = async <T>({
 
         if (auth) {
             headers['userId'] = userAuth.getUserId() || '';
+            headers['google-token'] = userAuth.getToken() || '';
         }
 
         const fetchOptions: RequestInit = {

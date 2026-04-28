@@ -1,23 +1,17 @@
 import { v2 as cloudinary } from 'cloudinary';
 
-export const uploadFileToCloudinary = async (filePath: string, folder = ''): Promise<boolean | string> => {
-    cloudinary.config({
-        cloud_name: 'dbid6no6r',
-        api_key: '875931171629178',
-        api_secret: process.env.CLOUDINARY_API_SECRET
-    });
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
+export const uploadFileToCloudinary = async (filePath: string, folder = ''): Promise<boolean | string> => {
     try {
         const result = await cloudinary.uploader.upload(filePath, {
-            folder: folder,
+            folder,
             resource_type: 'auto',
             timeout: 120000
-        }, (err, result) => {
-            if (err) {
-                console.error('Cloudinary upload error:', err);
-                return false;
-            }
-            return result;
         });
         return result.secure_url || false;
     } catch (error) {
@@ -27,11 +21,6 @@ export const uploadFileToCloudinary = async (filePath: string, folder = ''): Pro
 }
 
 export const deleteFileFromCloudinary = async (publicId: string): Promise<boolean> => {
-    cloudinary.config({
-        cloud_name: 'dbid6no6r',
-        api_key: '875931171629178',
-        api_secret: process.env.CLOUDINARY_API_SECRET
-    });
     try {
         const result = await cloudinary.uploader.destroy(publicId);
         return result.result === 'ok';

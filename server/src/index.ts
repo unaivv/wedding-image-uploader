@@ -1,10 +1,11 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import files from "./routes/files";
 import events from "./routes/event";
 import users from "./routes/user";
 import challenges from "./routes/challenge";
 import path from "path";
-import cors from "cors"; //TODO: delete this in production, only for development purposes
+import cors from "cors";
 import 'dotenv/config'
 
 const app = express();
@@ -20,8 +21,18 @@ if (process.env.NODE_ENV === "production") {
     credentials: true
   }));
 } else {
-  app.use(cors()); //TODO: delete this in production, only for development purposes
+  app.use(cors());
 }
+
+const uploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many upload requests, please try again in a minute." },
+});
+
+app.use("/files/upload", uploadLimiter);
 
 app.use("/files", files);
 app.use('/event', events);
@@ -30,6 +41,4 @@ app.use('/challenge', challenges)
 
 app.use('/images', express.static(path.resolve(__dirname, 'buckets/images')));
 
-app.listen(port, () => {
-  console.log(`Listening on port ${port}`);
-});
+app.listen(port);

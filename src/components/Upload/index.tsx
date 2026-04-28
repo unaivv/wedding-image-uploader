@@ -79,6 +79,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                 }}
                 headers={{
                     userId: auth.getUserId() || '',
+                    'google-token': auth.getToken() || '',
                 }}
                 onReupload={async (file) => {
                     setLoading(true);
@@ -88,6 +89,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                             headers: {
                                 'Content-Type': 'application/json',
                                 userId: auth.getUserId() || '',
+                                'google-token': auth.getToken() || '',
                             },
                             body: JSON.stringify({
                                 fileKey: file.fileKey,

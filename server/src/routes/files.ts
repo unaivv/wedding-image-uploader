@@ -1,17 +1,34 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 import { useDatabase } from "../services/ddbb";
 import { deleteFile, saveFile } from "../services/files";
 import multer from "multer";
 import path from "path";
+import sharp from "sharp";
 import FileModel, { IFile } from "../models/file";
 import { deleteFileFromCloudinary, uploadFileToCloudinary } from "../services/useCloudinary";
 import { compressImage, convertToWebp } from "../services/images";
-import ChallengeModel from "../models/challenge";
+import ChallengeModel, { IChallenge } from "../models/challenge";
 import { authenticateUser } from "../services/auth";
+
+const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 const router = Router();
 const folder = path.join(__dirname, '../buckets/images/');
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: MAX_FILE_SIZE },
+    fileFilter: (_req, file, cb) => {
+        if (ALLOWED_MIME_TYPES.has(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error(`File type not allowed: ${file.mimetype}`));
+        }
+    }
+});
+
+type Participant = IChallenge['participants'][number];
 
 router.get("/get-all", authenticateUser, async (req: Request, res: Response) => {
   const params = req.query;
@@ -31,7 +48,7 @@ router.get("/get-all", authenticateUser, async (req: Request, res: Response) => 
       const fileIds: string[] = [];
       challenges.forEach(challenge => {
         if (challenge.participants && Array.isArray(challenge.participants)) {
-          challenge.participants.forEach((p: any) => {
+          challenge.participants.forEach((p: Participant) => {
             if (p.file) fileIds.push(p.file.toString());
           });
         }
@@ -88,6 +105,13 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
   const uploadResults: { fileName: string; success: boolean; dbId?: string }[] = [];
 
   for (const file of files["file"]) {
+    try {
+      await sharp(file.buffer).metadata();
+    } catch {
+      res.status(400).json({ error: `Invalid image file: ${file.originalname}` });
+      return;
+    }
+
     const extension = path.extname(file.originalname);
     const localPath = `${eventId}/${userId}-${Date.now()}${extension}`
     const filePath = `${folder}${localPath}`;
@@ -96,7 +120,6 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
     const webpImage = await convertToWebp(filePath);
 
     if (!webpImage) {
-      console.error("Error converting image to WebP");
       res.status(500).json({ error: "Failed to convert image to WebP" });
       return;
     }
@@ -104,7 +127,6 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
     const cloudinaryFullImageUrl = await uploadFileToCloudinary(webpImage, eventId)
 
     if (!cloudinaryFullImageUrl) {
-      console.error("Error uploading file to Cloudinary");
       res.status(500).json({ error: "Failed to upload file to Cloudinary" });
       return;
     }
@@ -112,7 +134,6 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
     const imageCompressed = await compressImage(filePath)
 
     if (!imageCompressed) {
-      console.error("Error compressing image");
       res.status(500).json({ error: "Failed to compress image" });
       return;
     }
@@ -120,7 +141,6 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
     const cloudinaryCompressedImageUrl = await uploadFileToCloudinary(imageCompressed, eventId)
 
     if (!cloudinaryCompressedImageUrl) {
-      console.error("Error uploading compressed image to Cloudinary");
       res.status(500).json({ error: "Failed to upload compressed image to Cloudinary" });
       return;
     }
@@ -150,14 +170,14 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
           });
 
           if (!challenge) {
-            console.error("Challenge not found");
             res.status(404).json({ error: "Challenge not found" });
             return;
           }
-          console.log(challenge.participants, userId)
-          const isParticipating = challenge.participants.some(participant => participant.user.toString() === body.userId);
+
+          const isParticipating = challenge.participants.some(
+            (p: Participant) => p.user.toString() === body.userId
+          );
           if (isParticipating) {
-            console.error("User is already participating in this challenge");
             res.status(400).json({ error: "User is already participating in this challenge" });
             return;
           }
@@ -179,7 +199,6 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
           })
 
           if (!updatedChallenge) {
-            console.error("Error updating challenge with new participant");
             res.status(500).json({ error: "Failed to update challenge with new participant" });
             return;
           }
@@ -253,7 +272,6 @@ router.get("/delete", authenticateUser, async (req: Request, res: Response) => {
       await FileModel.deleteOne({ _id: fileId }).exec();
     });
 
-    //remove file from challenge if is a participant file
     const challenge = await useDatabase(async () => {
       return ChallengeModel.findOne({ "participants.file": fileId }).exec();
     });
@@ -287,22 +305,18 @@ router.get('/like', authenticateUser, async (req: Request, res: Response) => {
   }
   try {
     const file = await useDatabase<IFile | null>(async () => {
-      return FileModel
-        .findById(fileId)
-        .exec();
-    }
-    );
+      return FileModel.findById(fileId).exec();
+    });
     if (!file) {
       res.status(404).json({ error: "File not found" });
       return;
     }
     const likedBy = file.likedBy || [];
-    const mongoose = require("mongoose");
     const userObjectId = new mongoose.Types.ObjectId(userId as string);
 
-    if (likedBy.some((id: any) => id.equals(userObjectId))) {
+    if (likedBy.some((id: mongoose.Types.ObjectId) => id.equals(userObjectId))) {
       await useDatabase(async () => {
-        file.likedBy = likedBy.filter((id: any) => !id.equals(userObjectId));
+        file.likedBy = likedBy.filter((id: mongoose.Types.ObjectId) => !id.equals(userObjectId));
         await file.save();
       });
       res.json({ message: "Like removed", liked: false });
@@ -320,6 +334,18 @@ router.get('/like', authenticateUser, async (req: Request, res: Response) => {
     console.error("Error liking file:", error);
     res.status(500).json({ error: "Internal server error" });
   }
+});
+
+router.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        res.status(413).json({ error: "File too large. Maximum size is 20MB" });
+        return;
+    }
+    if (err.message?.startsWith('File type not allowed')) {
+        res.status(415).json({ error: err.message });
+        return;
+    }
+    next(err);
 });
 
 export default router;

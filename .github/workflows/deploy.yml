@@ -1,0 +1,22 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+
+jobs:
+  deploy-backend:
+    name: Deploy backend to Raspberry Pi
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deploy webhook
+        run: |
+          PAYLOAD='{"ref":"refs/heads/main"}'
+          SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "${{ secrets.WEBHOOK_SECRET_WEDDING }}" | sed 's/.*= //')
+          curl --fail --silent --show-error \
+            -X POST https://unaividal.com/hooks/deploy-wedding \
+            -H "Content-Type: application/json" \
+            -H "X-Hub-Signature-256: sha256=${SIGNATURE}" \
+            -d "$PAYLOAD"
