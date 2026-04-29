@@ -100,21 +100,33 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
         const webpImage = await convertToWebp(filePath);
         if (!webpImage) { sendError(res, 500, "Failed to convert image to WebP"); return; }
 
-        const cloudinaryFullUrl = await uploadFileToCloudinary(webpImage, eventId);
-        if (!cloudinaryFullUrl) { sendError(res, 500, "Failed to upload file to Cloudinary"); return; }
+        let cloudinaryFullUrl: string;
+        let cloudinaryCompressedUrl: string;
+        try {
+            cloudinaryFullUrl = await uploadFileToCloudinary(webpImage, eventId);
+        } catch (err) {
+            logger.error("Cloudinary full upload failed", err);
+            sendError(res, 500, `Cloudinary upload error: ${err instanceof Error ? err.message : String(err)}`);
+            return;
+        }
 
         const imageCompressed = await compressImage(filePath);
         if (!imageCompressed) { sendError(res, 500, "Failed to compress image"); return; }
 
-        const cloudinaryCompressedUrl = await uploadFileToCloudinary(imageCompressed, eventId);
-        if (!cloudinaryCompressedUrl) { sendError(res, 500, "Failed to upload compressed image to Cloudinary"); return; }
+        try {
+            cloudinaryCompressedUrl = await uploadFileToCloudinary(imageCompressed, eventId);
+        } catch (err) {
+            logger.error("Cloudinary compressed upload failed", err);
+            sendError(res, 500, `Cloudinary compressed upload error: ${err instanceof Error ? err.message : String(err)}`);
+            return;
+        }
 
         deleteFile(filePath);
         deleteFile(imageCompressed);
         deleteFile(webpImage);
 
         let dbId: string | undefined;
-        if (fileSaved && cloudinaryFullUrl) {
+        if (fileSaved) {
             try {
                 const fileDoc = new FileModel({ fullSrc: cloudinaryFullUrl, compressedSrc: cloudinaryCompressedUrl, eventId, userId, caption: caption ?? '' });
                 const savedFile = await useDatabase<IFile>(() => fileDoc.save());
