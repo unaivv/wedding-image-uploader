@@ -3,17 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import { getAllPhotos, downloadAllPhotos, downloadSelectedPhotos } from "./service";
 import { RowsPhotoAlbum } from "react-photo-album";
 import "react-photo-album/rows.css";
-import "yet-another-react-lightbox/styles.css";
-import "yet-another-react-lightbox/plugins/captions.css";
-import Lightbox from "yet-another-react-lightbox";
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import Captions from "yet-another-react-lightbox/plugins/captions";
-import Share from "yet-another-react-lightbox/plugins/share";
-import Video from "yet-another-react-lightbox/plugins/video";
 import styles from './allPhotos.module.css';
 import { auth } from "../../utils/auth";
 import { Button, Loader, Message, Placeholder, SelectPicker, Toggle, useToaster } from "rsuite";
 import { Photo } from "../Photo";
+import { Lightbox } from "../Lightbox";
 import type { IPhoto, IPhotosFromBackend, IUser } from "./types";
 import { Link } from "react-router-dom";
 import PlusIcon from '@rsuite/icons/Plus';
@@ -25,10 +19,7 @@ import PlayOutlineIcon from '@rsuite/icons/PlayOutline';
 import PauseOutlineIcon from '@rsuite/icons/PauseOutline';
 import { useSSE } from "../../hooks/useSSE";
 import { logger } from "../../utils/logger";
-import { Comments } from "../Comments";
 import type { IComment } from "../Comments/service";
-import MessageIcon from '@rsuite/icons/Message';
-import { cn } from "../../utils/cn";
 
 const SLIDESHOW_SPEEDS = { slow: 5000, normal: 3000, fast: 1500 } as const;
 type SlideshowSpeed = keyof typeof SLIDESHOW_SPEEDS;
@@ -71,7 +62,6 @@ const AllPhotos = () => {
     const [slideshowActive, setSlideshowActive] = useState(false);
     const [slideshowSpeed, setSlideshowSpeed] = useState<SlideshowSpeed>('normal');
     const slideshowRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const [commentsOpen, setCommentsOpen] = useState(false);
     const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
     const [loading, setLoading] = useState(true);
@@ -241,23 +231,6 @@ const AllPhotos = () => {
     const sortedPhotos = [...filtered].sort(photoComparator);
     const sortedLightbox = [...filteredLightbox].sort(photoComparator);
 
-    const lightboxSlides = sortedLightbox.map(p => {
-        if (p.isVideo) {
-            return {
-                type: 'video' as const,
-                ...p,
-                description: p.caption || undefined,
-                share: { url: `${window.location.origin}/?photo=${p.id}`, title: 'Unai & Marifeli 💍' },
-                sources: [{ src: p.fullSrc ?? p.src, type: 'video/mp4' }],
-            };
-        }
-        return {
-            ...p,
-            description: p.caption || undefined,
-            share: { url: `${window.location.origin}/?photo=${p.id}`, title: 'Unai & Marifeli 💍' },
-        };
-    });
-
     const activeFilterCount = [selectedUserId].filter(Boolean).length;
 
     return (
@@ -356,40 +329,15 @@ const AllPhotos = () => {
                         padding={2.5}
                         render={{ image: (props, context) => Photo(props, context, deleteLocalPhotos, toggleSelect, selectedIds.has((context.photo as IPhoto).id)) }}
                     />
-                    <Lightbox
-                        index={index}
-                        slides={lightboxSlides}
-                        open={index >= 0}
-                        close={() => { setIndex(-1); setSearchParams({}); stopSlideshow(); setCommentsOpen(false); }}
-                        on={{ view: ({ index: i }) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); } }}
-                        plugins={[Zoom, Captions, Share, Video]}
-                        zoom={{ maxZoomPixelRatio: 2, scrollToZoom: true }}
-                        captions={{ showToggle: true, descriptionMaxLines: 2 }}
-                        toolbar={{
-                            buttons: [
-                                <button
-                                    key="comments"
-                                    type="button"
-                                    className={cn('yarl__button', styles.commentToggleBtn)}
-                                    onClick={() => setCommentsOpen(o => !o)}
-                                    title="Comentarios"
-                                >
-                                    <MessageIcon fontSize="1.2em" />
-                                    {index >= 0 && sortedLightbox[index] && (commentCounts[sortedLightbox[index].id] ?? 0) > 0 && (
-                                        <span className={styles.commentBadge}>{commentCounts[sortedLightbox[index].id]}</span>
-                                    )}
-                                </button>,
-                                'close',
-                            ],
-                        }}
-                    />
-                    {commentsOpen && index >= 0 && sortedLightbox[index] && (
-                        <div className={styles.commentsOverlay}>
-                            <Comments
-                                fileId={sortedLightbox[index].id}
-                                onNewComment={(fileId) => setCommentCounts(prev => ({ ...prev, [fileId]: (prev[fileId] ?? 0) + 1 }))}
-                            />
-                        </div>
+                    {index >= 0 && (
+                        <Lightbox
+                            slides={sortedLightbox}
+                            index={index}
+                            onClose={() => { setIndex(-1); setSearchParams({}); stopSlideshow(); }}
+                            onIndexChange={(i) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); }}
+                            onCommentAdded={(fileId) => setCommentCounts(prev => ({ ...prev, [fileId]: (prev[fileId] ?? 0) + 1 }))}
+                            commentCounts={commentCounts}
+                        />
                     )}
                 </>
             )}
