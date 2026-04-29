@@ -29,14 +29,13 @@ const fetchService = async <T>({
         const response = await fetch(url, fetchOptions);
 
         if (!response.ok) {
-            console.error('Fetch error:', response.statusText);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
         return data;
     } catch (error) {
-        if (error instanceof Error && error.message.includes('HTTP error! status: 403')) {
+        if (error instanceof Error && (error.message.includes('status: 401') || error.message.includes('status: 403'))) {
             userAuth.logout();
         }
         throw error;

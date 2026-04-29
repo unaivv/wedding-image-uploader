@@ -13,44 +13,48 @@ export interface UserAuth {
     _id: string
 }
 
+const decodePayload = (token: string): Record<string, unknown> | null => {
+    try {
+        return JSON.parse(atob(token.split('.')[1]));
+    } catch {
+        return null;
+    }
+};
+
 export const auth = {
     isLoggedIn(): boolean {
-        return !!localStorage.getItem(TOKEN_KEY);
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return false;
+        const payload = decodePayload(token);
+        if (!payload) return false;
+        const exp = payload['exp'] as number | undefined;
+        if (exp && Date.now() / 1000 > exp) {
+            auth.logout();
+            return false;
+        }
+        return true;
     },
     saveToken(token: string) {
         localStorage.setItem(TOKEN_KEY, token);
     },
     getToken(): string | null {
+        if (!auth.isLoggedIn()) return null;
         return localStorage.getItem(TOKEN_KEY);
     },
     logout() {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_ID_KEY);
-        window.location.href = `/login`;
+        window.location.href = '/login';
     },
-    getUserEmail() {
-        try {
-            const token = auth.getToken()
-            if (!token) {
-                return null;
-            }
-            return JSON.parse(atob(token.split('.')[1])).email
-        } catch (e) {
-            console.error('Error parsing token:', e);
-            return null;
-        }
+    getUserEmail(): string | null {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return null;
+        return (decodePayload(token)?.['email'] as string) ?? null;
     },
-    getUserName() {
-        try {
-            const token = auth.getToken()
-            if (!token) {
-                return null;
-            }
-            return JSON.parse(atob(token.split('.')[1])).given_name
-        } catch (e) {
-            console.error('Error parsing token:', e);
-            return null;
-        }
+    getUserName(): string | null {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return null;
+        return (decodePayload(token)?.['given_name'] as string) ?? null;
     },
     setUserId(userId: string) {
         localStorage.setItem(USER_ID_KEY, userId);
