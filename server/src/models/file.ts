@@ -9,7 +9,8 @@ export const fileSchema = new Schema(
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
         likedBy: [{ type: Schema.Types.ObjectId, ref: 'User', default: []}],
-        caption: { type: String, default: '' }
+        caption: { type: String, default: '' },
+        isVideo: { type: Boolean, default: false }
     }, 
     {
         timestamps: true,
@@ -26,6 +27,7 @@ export interface IFile extends Document {
     updatedAt?: Date;
     likedBy?: mongoose.Types.ObjectId[];
     caption?: string;
+    isVideo?: boolean;
 }
 
 const FileModel = mongoose.model<IFile>('File', fileSchema);

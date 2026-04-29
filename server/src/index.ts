@@ -7,6 +7,7 @@ import { router as sse } from "./routes/sse";
 import events from "./routes/event";
 import users from "./routes/user";
 import challenges from "./routes/challenge";
+import { router as comments } from "./routes/comments";
 import path from "path";
 import cors from "cors";
 
@@ -41,7 +42,8 @@ app.use("/files", files);
 app.use('/events', sse);
 app.use('/event', events);
 app.use('/user', users)
-app.use('/challenge', challenges)
+app.use('/challenge', challenges);
+app.use('/comments', comments);
 
 app.use('/images', express.static(path.resolve(__dirname, 'buckets/images')));
 

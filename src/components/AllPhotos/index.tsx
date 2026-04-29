@@ -9,6 +9,7 @@ import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import Captions from "yet-another-react-lightbox/plugins/captions";
 import Share from "yet-another-react-lightbox/plugins/share";
+import Video from "yet-another-react-lightbox/plugins/video";
 import styles from './allPhotos.module.css';
 import { auth } from "../../utils/auth";
 import { Button, Loader, Message, Placeholder, SelectPicker, Toggle, useToaster } from "rsuite";
@@ -20,8 +21,17 @@ import ReloadIcon from '@rsuite/icons/Reload';
 import FileDownloadIcon from '@rsuite/icons/FileDownload';
 import HeartIcon from '@rsuite/icons/Heart';
 import CalendarIcon from '@rsuite/icons/Calendar';
+import PlayOutlineIcon from '@rsuite/icons/PlayOutline';
+import PauseOutlineIcon from '@rsuite/icons/PauseOutline';
 import { useSSE } from "../../hooks/useSSE";
 import { logger } from "../../utils/logger";
+import { Comments } from "../Comments";
+import type { IComment } from "../Comments/service";
+import MessageIcon from '@rsuite/icons/Message';
+import { cn } from "../../utils/cn";
+
+const SLIDESHOW_SPEEDS = { slow: 5000, normal: 3000, fast: 1500 } as const;
+type SlideshowSpeed = keyof typeof SLIDESHOW_SPEEDS;
 
 const PAGE_LIMIT = 20;
 
@@ -36,6 +46,7 @@ const toPhoto = (photo: IPhotosFromBackend, fullRes: boolean): IPhoto => ({
     likedBy: photo.likedBy || [],
     caption: photo.caption,
     createdAt: photo.createdAt,
+    isVideo: photo.isVideo,
 });
 
 const objectIdToDate = (id: string): number => {
@@ -57,6 +68,11 @@ const AllPhotos = () => {
     const [downloadingSelected, setDownloadingSelected] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [slideshowActive, setSlideshowActive] = useState(false);
+    const [slideshowSpeed, setSlideshowSpeed] = useState<SlideshowSpeed>('normal');
+    const slideshowRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const [commentsOpen, setCommentsOpen] = useState(false);
+    const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -123,6 +139,17 @@ const AllPhotos = () => {
             if (seeAllFotos === 'false' && photo.userId._id !== auth.getUserId()) return;
             setPhotos(prev => [toPhoto(photo, false), ...prev]);
             setLightboxPhotos(prev => [toPhoto(photo, true), ...prev]);
+            const authorName = photo.userId?.name || photo.userId?.email?.split('@')[0] || 'Alguien';
+            toaster.push(
+                <Message type="info" showIcon closable header={`${authorName} subió una foto`}>
+                    <img src={photo.compressedSrc} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4, marginTop: 4 }} />
+                </Message>,
+                { placement: 'bottomEnd', duration: 4000 }
+            );
+        },
+        'new-comment': (data) => {
+            const { fileId } = data as { fileId: string; comment: IComment };
+            setCommentCounts(prev => ({ ...prev, [fileId]: (prev[fileId] ?? 0) + 1 }));
         },
     });
 
@@ -170,6 +197,25 @@ const AllPhotos = () => {
         });
     };
 
+    const stopSlideshow = () => {
+        if (slideshowRef.current) clearInterval(slideshowRef.current);
+        slideshowRef.current = null;
+        setSlideshowActive(false);
+    };
+
+    const startSlideshow = (photos: IPhoto[]) => {
+        if (photos.length === 0) return;
+        setIndex(0);
+        setSlideshowActive(true);
+        slideshowRef.current = setInterval(() => {
+            setIndex(prev => {
+                const next = prev + 1;
+                if (next >= photos.length) { stopSlideshow(); return -1; }
+                return next;
+            });
+        }, SLIDESHOW_SPEEDS[slideshowSpeed]);
+    };
+
     const uniqueUsers: IUser[] = [];
     const seenIds = new Set<string>();
     for (const p of photos) {
@@ -195,11 +241,22 @@ const AllPhotos = () => {
     const sortedPhotos = [...filtered].sort(photoComparator);
     const sortedLightbox = [...filteredLightbox].sort(photoComparator);
 
-    const lightboxSlides = sortedLightbox.map(p => ({
-        ...p,
-        description: p.caption || undefined,
-        share: { url: `${window.location.origin}/?photo=${p.id}`, title: 'Unai & Marifeli 💍' },
-    }));
+    const lightboxSlides = sortedLightbox.map(p => {
+        if (p.isVideo) {
+            return {
+                type: 'video' as const,
+                ...p,
+                description: p.caption || undefined,
+                share: { url: `${window.location.origin}/?photo=${p.id}`, title: 'Unai & Marifeli 💍' },
+                sources: [{ src: p.fullSrc ?? p.src, type: 'video/mp4' }],
+            };
+        }
+        return {
+            ...p,
+            description: p.caption || undefined,
+            share: { url: `${window.location.origin}/?photo=${p.id}`, title: 'Unai & Marifeli 💍' },
+        };
+    });
 
     const activeFilterCount = [selectedUserId].filter(Boolean).length;
 
@@ -216,6 +273,22 @@ const AllPhotos = () => {
                     <Button size="sm" appearance="subtle" onClick={handleDownloadAll} loading={downloading} startIcon={<FileDownloadIcon />}>
                         Descargar todas
                     </Button>
+                    {sortedPhotos.length > 0 && (
+                        slideshowActive
+                            ? <Button size="sm" appearance="subtle" onClick={stopSlideshow} startIcon={<PauseOutlineIcon />}>Pausar</Button>
+                            : <div className={styles.slideshowGroup}>
+                                <Button size="sm" appearance="subtle" onClick={() => startSlideshow(sortedPhotos)} startIcon={<PlayOutlineIcon />}>Presentación</Button>
+                                <select
+                                    className={styles.speedSelect}
+                                    value={slideshowSpeed}
+                                    onChange={e => setSlideshowSpeed(e.target.value as SlideshowSpeed)}
+                                >
+                                    <option value="slow">Lenta</option>
+                                    <option value="normal">Normal</option>
+                                    <option value="fast">Rápida</option>
+                                </select>
+                            </div>
+                    )}
                     {selectedIds.size > 0 && (
                         <Button size="sm" appearance="ghost" onClick={handleDownloadSelected} loading={downloadingSelected} startIcon={<FileDownloadIcon />}>
                             Descargar seleccionadas ({selectedIds.size})
@@ -283,16 +356,41 @@ const AllPhotos = () => {
                         padding={2.5}
                         render={{ image: (props, context) => Photo(props, context, deleteLocalPhotos, toggleSelect, selectedIds.has((context.photo as IPhoto).id)) }}
                     />
-                    <Lightbox
-                        index={index}
-                        slides={lightboxSlides}
-                        open={index >= 0}
-                        close={() => { setIndex(-1); setSearchParams({}); }}
-                        on={{ view: ({ index: i }) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); } }}
-                        plugins={[Zoom, Captions, Share]}
-                        zoom={{ maxZoomPixelRatio: 2, scrollToZoom: true }}
-                        captions={{ showToggle: true, descriptionMaxLines: 2 }}
-                    />
+                    <div className={cn(styles.lightboxWrapper, commentsOpen && styles.lightboxWithComments)}>
+                        <Lightbox
+                            index={index}
+                            slides={lightboxSlides}
+                            open={index >= 0}
+                            close={() => { setIndex(-1); setSearchParams({}); stopSlideshow(); setCommentsOpen(false); }}
+                            on={{ view: ({ index: i }) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); } }}
+                            plugins={[Zoom, Captions, Share, Video]}
+                            zoom={{ maxZoomPixelRatio: 2, scrollToZoom: true }}
+                            captions={{ showToggle: true, descriptionMaxLines: 2 }}
+                            toolbar={{
+                                buttons: [
+                                    <button
+                                        key="comments"
+                                        type="button"
+                                        className={cn('yarl__button', styles.commentToggleBtn)}
+                                        onClick={() => setCommentsOpen(o => !o)}
+                                        title="Comentarios"
+                                    >
+                                        <MessageIcon fontSize="1.2em" />
+                                        {index >= 0 && sortedLightbox[index] && (commentCounts[sortedLightbox[index].id] ?? 0) > 0 && (
+                                            <span className={styles.commentBadge}>{commentCounts[sortedLightbox[index].id]}</span>
+                                        )}
+                                    </button>,
+                                    'close',
+                                ],
+                            }}
+                        />
+                        {commentsOpen && index >= 0 && sortedLightbox[index] && (
+                            <Comments
+                                fileId={sortedLightbox[index].id}
+                                onNewComment={(fileId) => setCommentCounts(prev => ({ ...prev, [fileId]: (prev[fileId] ?? 0) + 1 }))}
+                            />
+                        )}
+                    </div>
                 </>
             )}
 

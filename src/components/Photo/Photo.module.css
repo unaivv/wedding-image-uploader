@@ -125,6 +125,19 @@ div:hover > .removeButton {
     opacity: 1;
 }
 
+.videoOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 30px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.18);
+}
+
 .photoBottom {
     display: flex;
     justify-content: space-between;

@@ -14,19 +14,26 @@ import { authenticateUser } from "../services/auth";
 import { logger } from "../services/logger";
 import { emitToEvent } from "../services/sseEmitter";
 
-const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
+const ALLOWED_VIDEO_TYPES = new Set(['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo']);
+const MAX_IMAGE_SIZE = 20 * 1024 * 1024;
+const MAX_VIDEO_SIZE = 200 * 1024 * 1024;
 
 const router = Router();
 const folder = path.join(__dirname, '../buckets/images/');
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: MAX_FILE_SIZE },
+    limits: { fileSize: MAX_VIDEO_SIZE },
     fileFilter: (_req, file, cb) => {
-        if (ALLOWED_MIME_TYPES.has(file.mimetype)) cb(null, true);
+        if (ALLOWED_IMAGE_TYPES.has(file.mimetype) || ALLOWED_VIDEO_TYPES.has(file.mimetype)) cb(null, true);
         else cb(new Error(`File type not allowed: ${file.mimetype}`));
     }
 });
+
+const isVideoMime = (mime: string) => ALLOWED_VIDEO_TYPES.has(mime);
+
+const videoThumbnailUrl = (videoUrl: string): string =>
+    videoUrl.replace('/video/upload/', '/video/upload/f_jpg,so_0,w_400,h_400,c_fill/').replace(/\.[^/.]+$/, '.jpg');
 
 type Participant = IChallenge['participants'][number];
 
@@ -85,50 +92,72 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
     const uploadResults: { fileName: string; success: boolean; dbId?: string }[] = [];
 
     for (const file of files['file']) {
-        try {
-            await sharp(file.buffer).metadata();
-        } catch (err) {
-            logger.error(`invalid image file: ${file.originalname}`, err);
-            sendError(res, 400, `Invalid image file: ${file.originalname}`);
+        const video = isVideoMime(file.mimetype);
+
+        if (!video && file.size > MAX_IMAGE_SIZE) {
+            sendError(res, 400, `Image too large: ${file.originalname}`);
             return;
+        }
+
+        if (!video) {
+            try {
+                await sharp(file.buffer).metadata();
+            } catch (err) {
+                logger.error(`invalid image file: ${file.originalname}`, err);
+                sendError(res, 400, `Invalid image file: ${file.originalname}`);
+                return;
+            }
         }
 
         const extension = path.extname(file.originalname);
         const filePath = `${folder}${eventId}/${userId}-${Date.now()}${extension}`;
         const fileSaved = saveFile(filePath, file.buffer);
 
-        const webpImage = await convertToWebp(filePath);
-        if (!webpImage) { sendError(res, 500, "Failed to convert image to WebP"); return; }
-
         let cloudinaryFullUrl: string;
         let cloudinaryCompressedUrl: string;
-        try {
-            cloudinaryFullUrl = await uploadFileToCloudinary(webpImage, eventId);
-        } catch (err) {
-            logger.error("Cloudinary full upload failed", err);
-            sendError(res, 500, `Cloudinary upload error: ${err instanceof Error ? err.message : String(err)}`);
-            return;
+
+        if (video) {
+            try {
+                cloudinaryFullUrl = await uploadFileToCloudinary(filePath, eventId);
+                cloudinaryCompressedUrl = videoThumbnailUrl(cloudinaryFullUrl);
+            } catch (err) {
+                logger.error("Cloudinary video upload failed", err);
+                sendError(res, 500, `Cloudinary upload error: ${err instanceof Error ? err.message : String(err)}`);
+                return;
+            }
+            deleteFile(filePath);
+        } else {
+            const webpImage = await convertToWebp(filePath);
+            if (!webpImage) { sendError(res, 500, "Failed to convert image to WebP"); return; }
+
+            try {
+                cloudinaryFullUrl = await uploadFileToCloudinary(webpImage, eventId);
+            } catch (err) {
+                logger.error("Cloudinary full upload failed", err);
+                sendError(res, 500, `Cloudinary upload error: ${err instanceof Error ? err.message : String(err)}`);
+                return;
+            }
+
+            const imageCompressed = await compressImage(filePath);
+            if (!imageCompressed) { sendError(res, 500, "Failed to compress image"); return; }
+
+            try {
+                cloudinaryCompressedUrl = await uploadFileToCloudinary(imageCompressed, eventId);
+            } catch (err) {
+                logger.error("Cloudinary compressed upload failed", err);
+                sendError(res, 500, `Cloudinary compressed upload error: ${err instanceof Error ? err.message : String(err)}`);
+                return;
+            }
+
+            deleteFile(filePath);
+            deleteFile(imageCompressed);
+            deleteFile(webpImage);
         }
-
-        const imageCompressed = await compressImage(filePath);
-        if (!imageCompressed) { sendError(res, 500, "Failed to compress image"); return; }
-
-        try {
-            cloudinaryCompressedUrl = await uploadFileToCloudinary(imageCompressed, eventId);
-        } catch (err) {
-            logger.error("Cloudinary compressed upload failed", err);
-            sendError(res, 500, `Cloudinary compressed upload error: ${err instanceof Error ? err.message : String(err)}`);
-            return;
-        }
-
-        deleteFile(filePath);
-        deleteFile(imageCompressed);
-        deleteFile(webpImage);
 
         let dbId: string | undefined;
         if (fileSaved) {
             try {
-                const fileDoc = new FileModel({ fullSrc: cloudinaryFullUrl, compressedSrc: cloudinaryCompressedUrl, eventId, userId, caption: caption ?? '' });
+                const fileDoc = new FileModel({ fullSrc: cloudinaryFullUrl, compressedSrc: cloudinaryCompressedUrl, eventId, userId, caption: caption ?? '', isVideo: video });
                 const savedFile = await useDatabase<IFile>(() => fileDoc.save());
 
                 if (challengeId) {

@@ -19,6 +19,7 @@ export interface IPhoto {
     likedBy: IUser[]
     caption?: string
     createdAt?: string
+    isVideo?: boolean
 }
 
 export interface IPhotosFromBackend {
@@ -32,4 +33,5 @@ export interface IPhotosFromBackend {
     userId: IUser
     likedBy: IUser[]
     caption?: string
+    isVideo?: boolean
 }

@@ -62,7 +62,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                 ref={uploaderRef}
                 action={`${import.meta.env.VITE_BACKEND_URL}/files/upload`}
                 draggable
-                accept="image/*"
+                accept="image/*,video/*"
                 multiple={!onlyButton}
                 listType="picture"
                 data={{

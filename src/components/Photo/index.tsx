@@ -150,6 +150,13 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos, toggleSelect,
                 sizes={sizes}
                 style={{ objectFit: "cover", width: "100%", height: "calc(100% - 30px)" }}
             />
+            {iPhoto.isVideo && (
+                <div className={styles.videoOverlay}>
+                    <svg viewBox="0 0 24 24" width="2em" height="2em" fill="white" aria-hidden="true">
+                        <path d="M8 5v14l11-7z" />
+                    </svg>
+                </div>
+            )}
             <div className={styles.photoBottom}>
                 <div className={styles.userNameWrapper}>
                     <div className={styles.avatar}>

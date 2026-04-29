@@ -32,6 +32,29 @@
     flex-wrap: wrap;
 }
 
+.slideshowGroup {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.speedSelect {
+    height: 28px;
+    padding: 0 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:focus {
+        outline: none;
+        border-color: var(--accent);
+    }
+}
+
 .toggleGroup {
     display: flex;
     align-items: center;
@@ -134,6 +157,46 @@
     span:first-child {
         font-size: 2.5rem;
     }
+}
+
+/* ── Lightbox + comments layout ─────────────────────────── */
+.lightboxWrapper {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+
+    & :global(.yarl__root) {
+        flex: 1;
+        position: relative;
+        min-width: 0;
+    }
+}
+
+.lightboxWithComments {
+    & :global(.yarl__root) {
+        right: 300px;
+    }
+}
+
+.commentToggleBtn {
+    position: relative;
+}
+
+.commentBadge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* ── Responsive ─────────────────────────────────────────── */
