@@ -356,7 +356,7 @@ const AllPhotos = () => {
                         padding={2.5}
                         render={{ image: (props, context) => Photo(props, context, deleteLocalPhotos, toggleSelect, selectedIds.has((context.photo as IPhoto).id)) }}
                     />
-                    <div className={cn(styles.lightboxWrapper, commentsOpen && styles.lightboxWithComments)}>
+                    {index >= 0 && <div className={cn(styles.lightboxWrapper, commentsOpen && styles.lightboxWithComments)}>
                         <Lightbox
                             index={index}
                             slides={lightboxSlides}
@@ -384,13 +384,13 @@ const AllPhotos = () => {
                                 ],
                             }}
                         />
-                        {commentsOpen && index >= 0 && sortedLightbox[index] && (
+                        {commentsOpen && sortedLightbox[index] && (
                             <Comments
                                 fileId={sortedLightbox[index].id}
                                 onNewComment={(fileId) => setCommentCounts(prev => ({ ...prev, [fileId]: (prev[fileId] ?? 0) + 1 }))}
                             />
                         )}
-                    </div>
+                    </div>}
                 </>
             )}
 
