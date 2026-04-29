@@ -1,6 +1,7 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
 import { router as files } from "./routes/files";
+import { router as sse } from "./routes/sse";
 import events from "./routes/event";
 import users from "./routes/user";
 import challenges from "./routes/challenge";
@@ -35,6 +36,7 @@ const uploadLimiter = rateLimit({
 app.use("/files/upload", uploadLimiter);
 
 app.use("/files", files);
+app.use('/events', sse);
 app.use('/event', events);
 app.use('/user', users)
 app.use('/challenge', challenges)

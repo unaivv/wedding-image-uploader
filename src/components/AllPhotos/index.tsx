@@ -1,5 +1,6 @@
+"use client";
 import { useEffect, useRef, useState } from "react";
-import { getAllPhotos } from "./service";
+import { getAllPhotos, downloadAllPhotos } from "./service";
 import { RowsPhotoAlbum } from "react-photo-album";
 import "react-photo-album/rows.css";
 import "yet-another-react-lightbox/styles.css";
@@ -13,6 +14,8 @@ import type { IPhoto, IPhotosFromBackend } from "./types";
 import { Link } from "react-router-dom";
 import PlusIcon from '@rsuite/icons/Plus';
 import ReloadIcon from '@rsuite/icons/Reload';
+import ArrowDownLineIcon from '@rsuite/icons/ArrowDownLine';
+import { useSSE } from "../../hooks/useSSE";
 
 const PAGE_LIMIT = 20;
 
@@ -35,6 +38,7 @@ const AllPhotos = () => {
     const [orderByLikes, setOrderByLikes] = useState(false);
     const [seeAllFotos, setAllPhotos] = useState<'true' | 'false'>('true');
     const [refreshKey, setRefreshKey] = useState(0);
+    const [downloading, setDownloading] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -96,6 +100,15 @@ const AllPhotos = () => {
         }
     };
 
+    useSSE(import.meta.env.VITE_EVENT_ID, {
+        'new-photo': (data) => {
+            const photo = data as IPhotosFromBackend & { id: string };
+            if (seeAllFotos === 'false' && photo.userId !== auth.getUserId()) return;
+            setPhotos(prev => [toPhoto(photo, false), ...prev]);
+            setLightboxPhotos(prev => [toPhoto(photo, true), ...prev]);
+        },
+    });
+
     useEffect(() => {
         if (!sentinelRef.current || !hasMore || loading) return;
 
@@ -117,13 +130,20 @@ const AllPhotos = () => {
         setIndex(-1);
     };
 
-    const sortedPhotos = [...photos].sort((a, b) =>
-        orderByLikes ? b.likedBy.length - a.likedBy.length : new Date(b.id).getTime() - new Date(a.id).getTime()
-    );
+    const handleDownload = () => {
+        setDownloading(true);
+        downloadAllPhotos(import.meta.env.VITE_EVENT_ID)
+            .catch(() => {
+                toaster.push(<Message type="error" showIcon closable>Error al descargar las fotos</Message>, { placement: 'topEnd' });
+            })
+            .finally(() => setDownloading(false));
+    };
 
-    const sortedLightbox = [...lightboxPhotos].sort((a, b) =>
-        orderByLikes ? b.likedBy.length - a.likedBy.length : new Date(b.id).getTime() - new Date(a.id).getTime()
-    );
+    const photoComparator = (a: IPhoto, b: IPhoto) =>
+        orderByLikes ? b.likedBy.length - a.likedBy.length : new Date(b.id).getTime() - new Date(a.id).getTime();
+
+    const sortedPhotos = [...photos].sort(photoComparator);
+    const sortedLightbox = [...lightboxPhotos].sort(photoComparator);
 
     return (
         <div className={styles.allPhotosConatiner}>
@@ -134,6 +154,15 @@ const AllPhotos = () => {
                     </Link>
                     <Button appearance="ghost" onClick={() => setRefreshKey(k => k + 1)} style={{ marginLeft: 8 }} endIcon={<ReloadIcon />}>
                         Refrescar
+                    </Button>
+                    <Button
+                        appearance="ghost"
+                        onClick={handleDownload}
+                        loading={downloading}
+                        style={{ marginLeft: 8 }}
+                        endIcon={<ArrowDownLineIcon />}
+                    >
+                        Descargar todo
                     </Button>
                 </div>
                 <div className={styles.right}>

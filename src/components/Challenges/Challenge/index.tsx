@@ -1,3 +1,4 @@
+"use client";
 import type { IChallengeProps } from "./types";
 import styles from "./Challenge.module.css";
 import { renderCountdown } from "./util";
@@ -24,7 +25,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     });
 
     useEffect(() => {
-        const interval = setInterval(() => setNow(new Date()), 60000);
+        const interval = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(interval);
     }, []);
 

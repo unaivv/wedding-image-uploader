@@ -1,3 +1,4 @@
+"use client";
 import { Button, Message, Uploader, useToaster } from 'rsuite';
 import { auth } from '../../utils/auth';
 import { useRef, useState } from 'react';
@@ -6,6 +7,7 @@ import styles from './Upload.module.css';
 import CloseIcon from '@rsuite/icons/Close';
 import CheckRoundIcon from '@rsuite/icons/CheckRound';
 import type { IUploadProps } from './types';
+import { cn } from '../../utils/cn';
 
 const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUploadProps) => {
     const userEmail = auth.getUserEmail();
@@ -16,6 +18,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
 
     const [loading, setLoading] = useState(false);
     const [files, setFiles] = useState<FileType[]>([]);
+    const [progress, setProgress] = useState<Map<string | number, number>>(new Map());
 
     const renderUploadInterior = () => {
         if (onlyButton) {
@@ -70,38 +73,56 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                     'google-token': auth.getToken() || '',
                 }}
                 autoUpload={false}
-                renderThumbnail={(file) => (
-                    <>
-                        {file.status === "finished" && (
-                            <div className={styles.success}>
-                                <CheckRoundIcon fontSize={'2em'} color='#000' />
-                            </div>
-                        )}
-                        {file.status !== "finished" && (
-                            <span
-                                className={styles.remove}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setFiles(prev => prev.filter(f => f.fileKey !== file.fileKey));
-                                }}
-                            >
-                                <CloseIcon fontSize={'0.7em'} />
-                            </span>
-                        )}
-                        <img
-                            src={
-                                file?.blobFile
-                                    ? (file.blobFile instanceof File ? URL.createObjectURL(file.blobFile) : typeof file.blobFile === 'string' ? file.blobFile : undefined)
-                                    : file.url
-                            }
-                            alt={file.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                    </>
-                )}
+                renderThumbnail={(file) => {
+                    const pct = file.fileKey !== undefined ? (progress.get(file.fileKey) ?? null) : null;
+                    return (
+                        <>
+                            {file.status === "finished" && (
+                                <div className={styles.success}>
+                                    <CheckRoundIcon fontSize={'2em'} color='#000' />
+                                </div>
+                            )}
+                            {file.status !== "finished" && (
+                                <button
+                                    type="button"
+                                    className={styles.remove}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFiles(prev => prev.filter(f => f.fileKey !== file.fileKey));
+                                    }}
+                                >
+                                    <CloseIcon fontSize={'0.7em'} />
+                                </button>
+                            )}
+                            {pct !== null && pct < 100 && (
+                                <div className={styles.progressOverlay}>
+                                    <div className={styles.progressBar} style={{ width: `${pct}%` }} />
+                                    <span className={styles.progressLabel}>{pct}%</span>
+                                </div>
+                            )}
+                            <img
+                                src={
+                                    file?.blobFile
+                                        ? (file.blobFile instanceof File ? URL.createObjectURL(file.blobFile) : typeof file.blobFile === 'string' ? file.blobFile : undefined)
+                                        : file.url
+                                }
+                                alt={file.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                        </>
+                    );
+                }}
                 onChange={(fileList) => setFiles(fileList)}
+                onProgress={(percent, file) => {
+                    if (file.fileKey !== undefined) {
+                        setProgress(prev => new Map(prev).set(file.fileKey!, percent));
+                    }
+                }}
                 onSuccess={(response, file) => {
                     setLoading(false);
+                    if (file.fileKey !== undefined) {
+                        setProgress(prev => { const next = new Map(prev); next.delete(file.fileKey!); return next; });
+                    }
                     if (response?.files?.length > 0) {
                         setFiles(prev => {
                             const newFiles = prev.map(f => f.blobFile === file.blobFile ? { ...file } : f);
@@ -124,7 +145,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                 onUpload={() => setLoading(true)}
                 fileList={files}
             >
-                <div className={`${styles.uploadContainer} ${onlyButton ? styles.onlyButton : ''}`}>
+                <div className={cn(styles.uploadContainer, onlyButton && styles.onlyButton)}>
                     {renderUploadInterior()}
                 </div>
             </Uploader>

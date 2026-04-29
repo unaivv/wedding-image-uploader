@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
+import archiver from "archiver";
 import { useDatabase } from "../services/ddbb";
 import { deleteFile, saveFile } from "../services/files";
 import multer from "multer";
@@ -11,6 +12,7 @@ import { compressImage, convertToWebp } from "../services/images";
 import ChallengeModel, { IChallenge } from "../models/challenge";
 import { authenticateUser } from "../services/auth";
 import { logger } from "../services/logger";
+import { emitToEvent } from "../services/sseEmitter";
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
@@ -76,7 +78,7 @@ router.get("/get-all", authenticateUser, async (req: Request, res: Response) => 
 });
 
 router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount: 10 }]), async (req: Request, res: Response): Promise<void> => {
-  const body = req.body;
+  const body = req.body as { eventId?: string; userId?: string; challengeId?: string };
   if (!body) return;
 
   const { eventId, userId, challengeId } = body;
@@ -145,6 +147,13 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
         }
 
         dbId = savedFile.id;
+        emitToEvent(eventId, 'new-photo', {
+          id: savedFile.id,
+          fullSrc: cloudinaryFullImageUrl,
+          compressedSrc: cloudinaryCompressedImageUrl,
+          eventId,
+          userId,
+        });
       } catch (err) {
         logger.error("DB save failed during upload", err);
         res.status(500).json({ error: "Failed to save file metadata" });
@@ -219,10 +228,42 @@ router.get('/like', authenticateUser, async (req: Request, res: Response) => {
       await file.save();
     });
 
+    emitToEvent(file.eventId.toString(), 'like', { fileId, liked: !alreadyLiked, userId });
     res.json({ message: alreadyLiked ? "Like removed" : "File liked", liked: !alreadyLiked });
   } catch (err) {
     logger.error("like failed", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get('/download-all', authenticateUser, async (req: Request, res: Response) => {
+  const { eventId } = req.query;
+  if (!eventId) { res.status(400).json({ error: 'Missing eventId' }); return; }
+
+  try {
+    const files = await useDatabase<IFile[]>(() =>
+      FileModel.find({ eventId }).select('fullSrc').lean().exec()
+    );
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="fotos-boda.zip"');
+
+    const archive = archiver('zip', { zlib: { level: 6 } });
+    archive.on('error', (err) => { logger.error('archiver error', err); });
+    archive.pipe(res);
+
+    for (const file of files) {
+      const fetchRes = await fetch(file.fullSrc);
+      if (!fetchRes.ok) continue;
+      const buffer = Buffer.from(await fetchRes.arrayBuffer());
+      const filename = file.fullSrc.split('/').pop() || `${file._id}.webp`;
+      archive.append(buffer, { name: filename });
+    }
+
+    await archive.finalize();
+  } catch (err) {
+    logger.error('download-all failed', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Internal server error' });
   }
 });
 
