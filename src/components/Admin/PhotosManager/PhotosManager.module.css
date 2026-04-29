@@ -108,3 +108,40 @@
     text-overflow: ellipsis;
     text-align: center;
 }
+
+.deleteBtn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(220, 38, 38, 0.85);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+    z-index: 2;
+    line-height: 1;
+    padding: 0;
+
+    .thumb:hover & {
+        opacity: 1;
+    }
+
+    &:hover {
+        background: rgba(185, 28, 28, 1);
+    }
+}
+
+@media (max-width: 700px) {
+    .deleteBtn {
+        opacity: 1;
+    }
+}

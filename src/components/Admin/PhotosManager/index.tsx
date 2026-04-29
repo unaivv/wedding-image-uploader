@@ -87,6 +87,21 @@ const PhotosManager = () => {
             .finally(() => setDeleting(false));
     };
 
+    const handleDeleteOne = (e: React.MouseEvent, id: string) => {
+        e.stopPropagation();
+        if (!window.confirm('¿Eliminar esta foto? Esta acción no se puede deshacer.')) return;
+        bulkDeletePhotos([id])
+            .then(() => {
+                setPhotos(prev => prev.filter(p => p._id !== id));
+                setSelectedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+                toaster.push(<Message type="success" showIcon closable>Foto eliminada</Message>, { placement: 'topEnd' });
+            })
+            .catch((err: unknown) => {
+                logger.error('delete one failed', err);
+                toaster.push(<Message type="error" showIcon closable>Error al eliminar</Message>, { placement: 'topEnd' });
+            });
+    };
+
     const uniqueUsers: AdminUser[] = [];
     const seenIds = new Set<string>();
     for (const p of photos) {
@@ -137,6 +152,12 @@ const PhotosManager = () => {
                         <img src={photo.compressedSrc} alt="" loading="lazy" />
                         {selectedIds.has(photo._id) && <span className={styles.check}>✓</span>}
                         {photo.isVideo && <span className={styles.videoTag}>▶</span>}
+                        <button
+                            type="button"
+                            className={styles.deleteBtn}
+                            onClick={e => handleDeleteOne(e, photo._id)}
+                            title="Eliminar foto"
+                        >✕</button>
                         <span className={styles.user}>{photo.userId?.name ?? '?'}</span>
                     </button>
                 ))}
