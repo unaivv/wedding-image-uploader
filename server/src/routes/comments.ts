@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { authenticateUser } from '../services/auth';
 import { useDatabase } from '../services/ddbb';
 import CommentModel from '../models/comment';
@@ -17,12 +18,16 @@ router.get('/counts', authenticateUser, async (req: Request, res: Response): Pro
     if (!raw) { res.json({ counts: {} }); return; }
     const fileIds = raw.split(',').filter(Boolean);
     try {
+        const objectIds = fileIds
+            .filter(id => mongoose.Types.ObjectId.isValid(id))
+            .map(id => new mongoose.Types.ObjectId(id));
+
         const rows = await useDatabase(async () =>
             CommentModel.aggregate([
-                { $match: { fileId: { $in: fileIds } } },
+                { $match: { fileId: { $in: objectIds } } },
                 { $group: { _id: '$fileId', count: { $sum: 1 } } },
             ]).exec()
-        ) as { _id: string; count: number }[];
+        ) as { _id: mongoose.Types.ObjectId; count: number }[];
         const counts: Record<string, number> = {};
         for (const row of rows) counts[String(row._id)] = row.count;
         res.json({ counts });
