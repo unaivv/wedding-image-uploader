@@ -76,7 +76,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                     userId: auth.getUserId() || '',
                     'google-token': auth.getToken() || '',
                 }}
-                autoUpload={false}
+                autoUpload={onlyButton}
                 renderThumbnail={(file) => {
                     const pct = file.fileKey !== undefined ? (progress.get(file.fileKey) ?? null) : null;
                     return (
