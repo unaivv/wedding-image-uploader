@@ -47,7 +47,18 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {} }:
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = ''; };
+
+        // Prevent iOS pinch-to-zoom and scroll glitches while lightbox is open
+        const viewport = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+        const original = viewport?.content ?? '';
+        if (viewport) {
+            viewport.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+        }
+
+        return () => {
+            document.body.style.overflow = '';
+            if (viewport) viewport.content = original;
+        };
     }, []);
 
     const onTouchStart = (e: React.TouchEvent) => {
