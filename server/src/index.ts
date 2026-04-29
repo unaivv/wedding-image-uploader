@@ -33,6 +33,7 @@ const uploadLimiter = rateLimit({
   message: { error: "Too many upload requests, please try again in a minute." },
 });
 
+app.use(express.json());
 app.use("/files/upload", uploadLimiter);
 
 app.use("/files", files);

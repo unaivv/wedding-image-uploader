@@ -11,9 +11,11 @@ REJECT if:
 ## TypeScript/React
 REJECT if:
 - `import * as React` → use `import { useState }` (named imports)
-- `var()` or hex colors in className → use Tailwind utilities
+- `var()` or hex colors directly in `className` string values (e.g. `className="text-[#fff]"`)
 - `useMemo`/`useCallback` without justification (React 19 Compiler handles this; justified cases: stable callback passed to IntersectionObserver or other imperative APIs)
 - `key={index}` on dynamic lists that can reorder or have items removed
+
+NOTE: This project uses CSS Modules and RSuite — NOT Tailwind. Inline `style` props are acceptable for one-off layout values; prefer CSS module classes for anything reused. Do NOT reject inline styles as a Tailwind violation.
 
 NOTE: `"use client"` is a Next.js/RSC directive only. This project uses Vite + React Router — do NOT require or flag `"use client"` in this codebase.
 

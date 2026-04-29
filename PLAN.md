@@ -48,44 +48,28 @@
 
 ## Tier 3 — Medio (mejoras importantes)
 
-- [ ] **T3-1: Real-time para likes y nuevas fotos**
-  - Implementar SSE (Server-Sent Events) en el backend: `GET /events/stream`
-  - Frontend: `EventSource` para escuchar eventos de nuevas fotos y likes
-  - WebSocket es overkill; SSE alcanza y no requiere librería extra
-
-- [ ] **T3-2: Descarga masiva de fotos**
-  - Endpoint `GET /files/download-all?eventId=...` que genere un ZIP con `archiver`
-  - Frontend: botón "Descargar todo" en la galería
-
-- [ ] **T3-3: Feedback de progreso real por archivo**
-  - El `Uploader` de RSuite soporta `onProgress` — conectarlo al estado
-  - Mostrar porcentaje de carga por archivo en la lista de preview
-
-- [ ] **T3-4: Countdown del challenge cada segundo**
-  - Cambiar `setInterval` de 60000ms a 1000ms en `Challenge/util.ts`
+- [x] **T3-1: Real-time para likes y nuevas fotos** — SSE con keep-alive 25s (Cloudflare)
+- [x] **T3-2: Descarga masiva de fotos** — ZIP streaming con archiver
+- [x] **T3-3: Feedback de progreso real por archivo** — barra por fileKey via onProgress
+- [x] **T3-4: Countdown del challenge cada segundo**
 
 ---
 
 ## Tier 4 — Nice to have
 
-- [ ] **T4-1: Links compartibles por foto**
-  - Route `/photo/:id` con meta Open Graph tags para WhatsApp/Twitter
-  - Botón "Compartir" en el lightbox
+- [x] **T4-1: Links compartibles por foto** — `?photo=:id` + YARL Share plugin
+- [x] **T4-2: Búsqueda y filtros en la galería** — dropdown fotógrafo + rango de fechas
+- [x] **T4-3: Captions en fotos** — textarea al subir + YARL Captions plugin en lightbox
+- [x] **T4-4: Respetar dark/light mode del sistema** — `prefers-color-scheme` + toggle manual
+- [x] **T4-5: EXIF stripping** — sharp lo hace por defecto
 
-- [ ] **T4-2: Búsqueda y filtros en la galería**
-  - Dropdown de fotógrafos (usuarios que subieron fotos)
-  - Filtro por rango de fechas
-  - Búsqueda del lado del cliente (sin backend) para eventos pequeños
+---
 
-- [ ] **T4-3: Captions en fotos**
-  - Campo de texto opcional al subir
-  - Mostrar caption en el lightbox si existe
+## Tier 5 — UI polish
 
-- [ ] **T4-4: Respetar dark/light mode del sistema**
-  - Detectar `prefers-color-scheme` y pasarlo a `CustomProvider` de RSuite
-  - Toggle manual para override
-
-- [ ] **T4-5: EXIF stripping antes de subir a Cloudinary**
-  - Las fotos pueden tener GPS metadata
-  - `sharp` ya puede limpiar metadata con `.withMetadata(false)`
-  - Agregar al pipeline de procesamiento existente en `files.ts`
+- [ ] **T5-1: Toolbar AllPhotos** — separar acciones (upload/refresh/download) de controles (sort/filter), fix bug CSS donde `.extraFilters` estaba anidado en `.actions` pero es sibling en el JSX
+- [ ] **T5-2: FilterBar cohesiva** — reemplazar dos date inputs sueltos por `DateRangePicker` de RSuite; panel visual para todos los filtros; badge de filtros activos
+- [ ] **T5-3: Challenge cards dark mode** — reemplazar `#ddd` / `#b8b8b8` hardcodeados por variables CSS de RSuite
+- [ ] **T5-4: Header** — más presencia, subtítulo o decoración acorde a boda
+- [ ] **T5-5: Upload page** — diseño centrado con mejor tipografía
+- [ ] **T5-6: Limpiar boilerplate** — eliminar CSS de Vite de `App.css` e `index.css`
