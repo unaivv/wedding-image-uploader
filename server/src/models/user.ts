@@ -5,7 +5,8 @@ export const userSchema = new Schema(
         picture: {type: String, required: false},
         email: {type: String, required: true},
         fullName: {type: String, required: true},
-        name: {type: String, required: true}, 
+        name: {type: String, required: true},
+        isAdmin: { type: Boolean, default: false },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now }
     }, 
@@ -20,6 +21,7 @@ export interface IUser extends Document {
     email: string;
     fullName: string;
     name: string;
+    isAdmin?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
 }

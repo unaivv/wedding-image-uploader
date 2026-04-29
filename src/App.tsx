@@ -5,9 +5,11 @@ import { CustomProvider } from 'rsuite';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HomePage } from './pages/home';
 import { UploadPage } from './pages/upload';
+import { AdminPage } from './pages/admin';
 import { Login } from './pages/login';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import PrivateRoute from './components/PrivateRoute';
+import { AdminRoute } from './components/Admin/AdminRoute';
 import { ThemeContext } from './context/ThemeContext';
 import { useTheme } from './hooks/useTheme';
 import { useEffect } from 'react';
@@ -29,6 +31,9 @@ const App = () => {
               <Route element={<PrivateRoute />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="subir" element={<UploadPage />} />
+              </Route>
+              <Route element={<AdminRoute />}>
+                <Route path="admin" element={<AdminPage />} />
               </Route>
               <Route path="login" element={<Login />} />
             </Routes>

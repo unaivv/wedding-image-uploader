@@ -2,6 +2,7 @@ import { get } from "./fetch";
 
 const TOKEN_KEY = 'google_token';
 const USER_ID_KEY = 'user_id';
+const IS_ADMIN_KEY = 'is_admin';
 
 export interface UserAuth {
     createdAt: string
@@ -11,6 +12,7 @@ export interface UserAuth {
     picture: string
     updatedAt: string
     _id: string
+    isAdmin?: boolean
 }
 
 const decodePayload = (token: string): Record<string, unknown> | null => {
@@ -44,6 +46,7 @@ export const auth = {
     logout() {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_ID_KEY);
+        localStorage.removeItem(IS_ADMIN_KEY);
         window.location.href = '/login';
     },
     getUserEmail(): string | null {
@@ -62,12 +65,19 @@ export const auth = {
     getUserId(): string | null {
         return localStorage.getItem(USER_ID_KEY);
     },
+    setIsAdmin(isAdmin: boolean) {
+        localStorage.setItem(IS_ADMIN_KEY, isAdmin ? '1' : '0');
+    },
+    isAdmin(): boolean {
+        return localStorage.getItem(IS_ADMIN_KEY) === '1';
+    },
     async login(token: string) {
         const user = await get<UserAuth>({
             url: `${import.meta.env.VITE_BACKEND_URL}/user/login?token=${token}`
         });
         auth.setUserId(user._id);
         auth.saveToken(token);
+        auth.setIsAdmin(user.isAdmin ?? false);
         return true;
     }
 };

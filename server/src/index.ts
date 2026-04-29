@@ -8,6 +8,7 @@ import events from "./routes/event";
 import users from "./routes/user";
 import challenges from "./routes/challenge";
 import { router as comments } from "./routes/comments";
+import { router as admin } from "./routes/admin";
 import path from "path";
 import cors from "cors";
 
@@ -44,6 +45,7 @@ app.use('/event', events);
 app.use('/user', users)
 app.use('/challenge', challenges);
 app.use('/comments', comments);
+app.use('/admin', admin);
 
 app.use('/images', express.static(path.resolve(__dirname, 'buckets/images')));
 

@@ -1,4 +1,5 @@
 import { Button, Toggle } from 'rsuite';
+import { Link } from 'react-router-dom';
 import { useThemeContext } from '../../context/ThemeContext';
 import { auth } from '../../utils/auth';
 import ExitIcon from '@rsuite/icons/Exit';
@@ -13,6 +14,11 @@ const Header = () => {
                 <span className={styles.subtitle}>Álbum de nuestra boda</span>
             </div>
             <div className={styles.controls}>
+                {auth.isAdmin() && (
+                    <Link to="/admin">
+                        <Button size="sm" appearance="subtle">Admin</Button>
+                    </Link>
+                )}
                 <Toggle
                     checked={theme === 'light'}
                     onChange={toggleTheme}
