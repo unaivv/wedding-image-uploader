@@ -103,7 +103,7 @@ const AllPhotos = () => {
     useSSE(import.meta.env.VITE_EVENT_ID, {
         'new-photo': (data) => {
             const photo = data as IPhotosFromBackend & { id: string };
-            if (seeAllFotos === 'false' && photo.userId !== auth.getUserId()) return;
+            if (seeAllFotos === 'false' && photo.userId._id !== auth.getUserId()) return;
             setPhotos(prev => [toPhoto(photo, false), ...prev]);
             setLightboxPhotos(prev => [toPhoto(photo, true), ...prev]);
         },
