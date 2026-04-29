@@ -1,9 +1,9 @@
 export interface IUser {
     email: string
-    fullName: string
+    fullName?: string
     _id: string
-    createdAt: string
-    updatedAt: string
+    createdAt?: string
+    updatedAt?: string
     picture?: string
     name?: string
 }
