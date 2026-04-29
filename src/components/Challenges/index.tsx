@@ -41,7 +41,7 @@ const ChallengesPage = () => {
         <div className={styles.container}>
             <h2 className={styles.title}>Retos fotográficos 🏆</h2>
             <p className={styles.description}>
-                Participá en los retos temáticos y ganá premios. Subí tu mejor foto para cada reto antes de que venza el tiempo.
+                Participa en los retos temáticos y gana premios. Sube tu mejor foto para cada reto antes de que venza el tiempo.
             </p>
             <div className={styles.sliderWrapper}>
                 <div className={styles.challengesSlider} ref={sliderRef}>

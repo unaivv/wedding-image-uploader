@@ -1,5 +1,7 @@
-import { Toggle } from 'rsuite';
+import { Button, Toggle } from 'rsuite';
 import { useThemeContext } from '../../context/ThemeContext';
+import { auth } from '../../utils/auth';
+import ExitIcon from '@rsuite/icons/Exit';
 import styles from './Header.module.css';
 
 const Header = () => {
@@ -18,6 +20,9 @@ const Header = () => {
                     unCheckedChildren="🌙"
                     size="lg"
                 />
+                <Button size="sm" appearance="subtle" onClick={() => auth.logout()} startIcon={<ExitIcon />}>
+                    Salir
+                </Button>
             </div>
         </header>
     );

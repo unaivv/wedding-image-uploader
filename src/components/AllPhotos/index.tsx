@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getAllPhotos, downloadAllPhotos } from "./service";
+import { getAllPhotos, downloadAllPhotos, downloadSelectedPhotos } from "./service";
 import { RowsPhotoAlbum } from "react-photo-album";
 import "react-photo-album/rows.css";
 import "yet-another-react-lightbox/styles.css";
@@ -17,7 +17,9 @@ import type { IPhoto, IPhotosFromBackend, IUser } from "./types";
 import { Link } from "react-router-dom";
 import PlusIcon from '@rsuite/icons/Plus';
 import ReloadIcon from '@rsuite/icons/Reload';
-import ArrowDownLineIcon from '@rsuite/icons/ArrowDownLine';
+import FileDownloadIcon from '@rsuite/icons/FileDownload';
+import HeartIcon from '@rsuite/icons/Heart';
+import CalendarIcon from '@rsuite/icons/Calendar';
 import { useSSE } from "../../hooks/useSSE";
 import { logger } from "../../utils/logger";
 
@@ -25,6 +27,7 @@ const PAGE_LIMIT = 20;
 
 const toPhoto = (photo: IPhotosFromBackend, fullRes: boolean): IPhoto => ({
     src: fullRes ? photo.fullSrc : photo.compressedSrc,
+    fullSrc: photo.fullSrc,
     width: fullRes ? 1500 : 200,
     height: fullRes ? 1500 : 200,
     id: photo.id,
@@ -51,9 +54,9 @@ const AllPhotos = () => {
     const [seeAllFotos, setAllPhotos] = useState<'true' | 'false'>('true');
     const [refreshKey, setRefreshKey] = useState(0);
     const [downloading, setDownloading] = useState(false);
+    const [downloadingSelected, setDownloadingSelected] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [dateFrom, setDateFrom] = useState('');
-    const [dateTo, setDateTo] = useState('');
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -142,11 +145,29 @@ const AllPhotos = () => {
         setIndex(-1);
     };
 
-    const handleDownload = () => {
+    const handleDownloadAll = () => {
         setDownloading(true);
         downloadAllPhotos(import.meta.env.VITE_EVENT_ID)
             .catch(() => toaster.push(<Message type="error" showIcon closable>Error al descargar las fotos</Message>, { placement: 'topEnd' }))
             .finally(() => setDownloading(false));
+    };
+
+    const handleDownloadSelected = () => {
+        const toDownload = sortedPhotos
+            .filter(p => selectedIds.has(p.id))
+            .map(p => ({ url: p.fullSrc ?? p.src, id: p.id }));
+        setDownloadingSelected(true);
+        downloadSelectedPhotos(toDownload)
+            .catch(() => toaster.push(<Message type="error" showIcon closable>Error al descargar las fotos</Message>, { placement: 'topEnd' }))
+            .finally(() => { setDownloadingSelected(false); setSelectedIds(new Set()); });
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
     };
 
     const uniqueUsers: IUser[] = [];
@@ -165,8 +186,6 @@ const AllPhotos = () => {
 
     const matchesFilters = (p: IPhoto) => {
         if (selectedUserId && p.user._id !== selectedUserId) return false;
-        if (dateFrom && objectIdToDate(p.id) < new Date(dateFrom).getTime()) return false;
-        if (dateTo && objectIdToDate(p.id) > new Date(dateTo + 'T23:59:59').getTime()) return false;
         return true;
     };
 
@@ -182,7 +201,7 @@ const AllPhotos = () => {
         share: { url: `${window.location.origin}/?photo=${p.id}`, title: 'Unai & Marifeli 💍' },
     }));
 
-    const activeFilterCount = [selectedUserId, dateFrom, dateTo].filter(Boolean).length;
+    const activeFilterCount = [selectedUserId].filter(Boolean).length;
 
     return (
         <div className={styles.container}>
@@ -191,17 +210,22 @@ const AllPhotos = () => {
                     <Link to="/subir">
                         <Button appearance="primary" size="sm" endIcon={<PlusIcon />}>Subir fotos</Button>
                     </Link>
-                    <Button size="sm" appearance="subtle" onClick={() => setRefreshKey(k => k + 1)} endIcon={<ReloadIcon />}>
+                    <Button size="sm" appearance="subtle" onClick={() => setRefreshKey(k => k + 1)} startIcon={<ReloadIcon />}>
                         Refrescar
                     </Button>
-                    <Button size="sm" appearance="subtle" onClick={handleDownload} loading={downloading} endIcon={<ArrowDownLineIcon />}>
-                        Descargar
+                    <Button size="sm" appearance="subtle" onClick={handleDownloadAll} loading={downloading} startIcon={<FileDownloadIcon />}>
+                        Descargar todas
                     </Button>
+                    {selectedIds.size > 0 && (
+                        <Button size="sm" appearance="ghost" onClick={handleDownloadSelected} loading={downloadingSelected} startIcon={<FileDownloadIcon />}>
+                            Descargar seleccionadas ({selectedIds.size})
+                        </Button>
+                    )}
                 </div>
                 <div className={styles.toolbarRight}>
                     <div className={styles.toggleGroup}>
                         <span>Ordenar</span>
-                        <Toggle size="md" checkedChildren="❤️" unCheckedChildren="📅" checked={orderByLikes} onChange={(v: boolean) => setOrderByLikes(v)} />
+                        <Toggle size="md" checkedChildren={<HeartIcon />} unCheckedChildren={<CalendarIcon />} checked={orderByLikes} onChange={(v: boolean) => setOrderByLikes(v)} />
                     </div>
                     <div className={styles.toggleGroup}>
                         <span>Fotos</span>
@@ -211,8 +235,6 @@ const AllPhotos = () => {
             </div>
 
             <div className={styles.filterBar}>
-                <span className={styles.filterLabel}>Filtrar</span>
-                <div className={styles.filterDivider} />
                 <SelectPicker
                     data={uniqueUsers.map(u => ({ label: u.name || u.email, value: u._id }))}
                     value={selectedUserId}
@@ -222,25 +244,11 @@ const AllPhotos = () => {
                     size="sm"
                     style={{ width: 150 }}
                 />
-                <input
-                    type="date"
-                    value={dateFrom}
-                    onChange={e => setDateFrom(e.target.value)}
-                    className={styles.dateInput}
-                    title="Desde"
-                />
-                <input
-                    type="date"
-                    value={dateTo}
-                    onChange={e => setDateTo(e.target.value)}
-                    className={styles.dateInput}
-                    title="Hasta"
-                />
                 {activeFilterCount > 0 && (
                     <button
                         type="button"
                         className={styles.activeCount}
-                        onClick={() => { setSelectedUserId(null); setDateFrom(''); setDateTo(''); }}
+                        onClick={() => setSelectedUserId(null)}
                     >
                         × {activeFilterCount} {activeFilterCount === 1 ? 'filtro' : 'filtros'}
                     </button>
@@ -267,16 +275,20 @@ const AllPhotos = () => {
                     <RowsPhotoAlbum
                         photos={sortedPhotos}
                         targetRowHeight={150}
-                        onClick={({ index: current }) => setIndex(current)}
+                        onClick={({ index: current }) => {
+                            const id = sortedPhotos[current]?.id;
+                            if (id && selectedIds.size > 0) { toggleSelect(id); return; }
+                            setIndex(current);
+                        }}
                         padding={2.5}
-                        render={{ image: (props, context) => Photo(props, context, deleteLocalPhotos) }}
+                        render={{ image: (props, context) => Photo(props, context, deleteLocalPhotos, toggleSelect, selectedIds.has((context.photo as IPhoto).id)) }}
                     />
                     <Lightbox
                         index={index}
                         slides={lightboxSlides}
                         open={index >= 0}
                         close={() => { setIndex(-1); setSearchParams({}); }}
-                        on={{ view: ({ index: i }) => setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }) }}
+                        on={{ view: ({ index: i }) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); } }}
                         plugins={[Zoom, Captions, Share]}
                         zoom={{ maxZoomPixelRatio: 2, scrollToZoom: true }}
                         captions={{ showToggle: true, descriptionMaxLines: 2 }}

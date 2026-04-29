@@ -10,6 +10,7 @@ export interface IUser {
 
 export interface IPhoto {
     src: string
+    fullSrc?: string
     width: number
     height: number
     id: string

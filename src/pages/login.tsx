@@ -24,7 +24,7 @@ const Login = () => {
                 <div className={styles.divider} />
                 <p className={styles.subtitle}>
                     Bienvenido al álbum de nuestra boda.<br />
-                    Iniciá sesión para ver y subir fotos.
+                    Inicia sesión para ver y subir fotos.
                 </p>
                 <div className={styles.loginWrapper}>
                     <GoogleLogin
@@ -36,7 +36,7 @@ const Login = () => {
                                     return;
                                 }
                                 toaster.push(
-                                    <Message type="error" showIcon closable>Error al iniciar sesión, por favor intentalo de nuevo.</Message>,
+                                    <Message type="error" showIcon closable>Error al iniciar sesión, por favor inténtalo de nuevo.</Message>,
                                     { placement: 'topEnd' }
                                 );
                             }
@@ -47,8 +47,8 @@ const Login = () => {
                                 { placement: 'topEnd' }
                             );
                         }}
-                        logo_alignment="left"
-                        containerProps={{ style: { width: '100%' } }}
+                        logo_alignment="center"
+                        containerProps={{ style: { display: 'flex', justifyContent: 'center' } }}
                     />
                 </div>
             </div>

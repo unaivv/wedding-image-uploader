@@ -23,7 +23,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
 
     const renderUploadInterior = () => {
         if (onlyButton) {
-            return <Button appearance="ghost" style={{ marginTop: 10 }}>Selecciona tus foto!</Button>;
+            return <Button appearance="ghost">Selecciona tus fotos</Button>;
         }
         return <>
             <span style={{
@@ -42,7 +42,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
             }}>
                 Haz clic o arrastra archivos a esta área para subirlos. Maximos archivos a la vez 10.
             </span>
-            <Button appearance="ghost" style={{ marginTop: 10 }}>Selecciona tus fotos!</Button>
+            <Button appearance="ghost">Selecciona tus fotos</Button>
         </>;
     };
 
@@ -52,20 +52,12 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                 <textarea
                     value={caption}
                     onChange={e => setCaption(e.target.value)}
-                    placeholder="Añadí un caption (opcional)"
+                    placeholder="Añade un caption (opcional)"
                     maxLength={200}
                     rows={2}
                     className={styles.captionInput}
                 />
             )}
-            <Button
-                appearance="primary"
-                style={{ marginTop: 20, width: '100%' }}
-                onClick={() => uploaderRef.current?.start()}
-                disabled={!userEmail || !userName || loading || files.length === 0}
-            >
-                Subir imagen{!onlyButton && 'es'}
-            </Button>
             <Uploader
                 ref={uploaderRef}
                 action={`${import.meta.env.VITE_BACKEND_URL}/files/upload`}
@@ -151,7 +143,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                     setLoading(false);
                     logger.error('upload failed', reason);
                     toaster.push(
-                        <Message type="error" showIcon closable>Error al subir la foto. Intentá de nuevo.</Message>,
+                        <Message type="error" showIcon closable>Error al subir la foto. Inténtalo de nuevo.</Message>,
                         { placement: 'topEnd' }
                     );
                 }}
@@ -162,6 +154,16 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                     {renderUploadInterior()}
                 </div>
             </Uploader>
+            {!onlyButton && (
+                <Button
+                    appearance="primary"
+                    className={styles.submitButton}
+                    onClick={() => uploaderRef.current?.start()}
+                    disabled={!userEmail || !userName || loading || files.length === 0}
+                >
+                    Subir imágenes
+                </Button>
+            )}
         </div>
     );
 };

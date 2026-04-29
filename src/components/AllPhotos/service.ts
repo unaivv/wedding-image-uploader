@@ -38,6 +38,24 @@ export const getPhotoById = async (id: string): Promise<IPhotosFromBackend> => {
     return { ...rest, id: _id ?? rest.id } as IPhotosFromBackend;
 };
 
+export const downloadPhoto = async (url: string, filename: string): Promise<void> => {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+};
+
+export const downloadSelectedPhotos = async (photos: { url: string; id: string }[]): Promise<void> => {
+    for (const { url, id } of photos) {
+        await downloadPhoto(url, `foto-${id}.jpg`);
+    }
+};
+
 export const downloadAllPhotos = async (eventId: string): Promise<void> => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/files/download-all?eventId=${eventId}`;
     const response = await fetch(url, {

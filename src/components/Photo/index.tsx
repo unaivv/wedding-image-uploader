@@ -3,20 +3,36 @@ import { Image, Loader, Message, Tooltip, Whisper, useToaster } from "rsuite";
 import type { IPhoto } from "../AllPhotos/types";
 import styles from "./Photo.module.css";
 import CloseIcon from '@rsuite/icons/Close';
+import FileDownloadIcon from '@rsuite/icons/FileDownload';
 import { deleteFile, likeFile } from "../Upload/service";
+import { downloadPhoto } from "../AllPhotos/service";
 import { useState, useRef } from "react";
 import { auth } from "../../utils/auth";
 import { cn } from "../../utils/cn";
 import { logger } from "../../utils/logger";
 import ArrowDownLineIcon from '@rsuite/icons/ArrowDownLine';
 
+const HeartFilled = () => (
+    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+        <path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z" />
+    </svg>
+);
+
+const HeartOutline = () => (
+    <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+);
+
 interface PhotoComponentProps {
     renderProps: RenderImageProps;
     context: RenderImageContext;
     deleteLocalPhotos: (photoId: string) => void;
+    toggleSelect?: (id: string) => void;
+    isSelected?: boolean;
 }
 
-const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoComponentProps) => {
+const PhotoComponent = ({ renderProps, context, deleteLocalPhotos, toggleSelect, isSelected }: PhotoComponentProps) => {
     const { alt = "", title, sizes } = renderProps;
     const { photo, width, height } = context;
     const toaster = useToaster();
@@ -93,16 +109,38 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
             });
     };
 
+    const handleDownloadSingle = (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.stopPropagation();
+        const url = iPhoto.fullSrc ?? iPhoto.src;
+        downloadPhoto(url, `foto-${photoId}.jpg`).catch((err: unknown) => {
+            logger.error('download failed', err);
+            toaster.push(<Message type="error" showIcon closable>Error al descargar la foto</Message>, { placement: 'topEnd' });
+        });
+    };
+
     return (
-        <div className={styles.photoCard} style={{ width, height: height + 30, position: "relative" }}>
+        <div className={cn(styles.photoCard, isSelected && styles.selected)} style={{ width, height: height + 30, position: "relative" }}>
             {loading && (
                 <div className={styles.loadingOverlay}>
-                    <Loader size="md" content="Borrando..." />
+                    <Loader size="md" content="Eliminando..." />
                 </div>
             )}
             {canDelete && (
                 <button type="button" onClick={handleDelete} className={styles.removeButton}>
                     <CloseIcon fontSize={'1em'} color="white" />
+                </button>
+            )}
+            <button type="button" onClick={handleDownloadSingle} className={styles.downloadButton} title="Descargar foto">
+                <FileDownloadIcon fontSize={'1em'} color="white" />
+            </button>
+            {toggleSelect && (
+                <button
+                    type="button"
+                    className={cn(styles.selectButton, isSelected && styles.selectButtonActive)}
+                    onClick={(e) => { e.stopPropagation(); toggleSelect(photoId); }}
+                    title={isSelected ? 'Deseleccionar' : 'Seleccionar'}
+                >
+                    {isSelected ? '✓' : ''}
                 </button>
             )}
             <Image
@@ -125,7 +163,7 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                         className={cn(styles.likeButton, liked && styles.liked)}
                         onClick={handleLike}
                     >
-                        {liked ? '❤️' : '🤍'}
+                        {liked ? <HeartFilled /> : <HeartOutline />}
                     </button>
                     <Whisper
                         placement="top"
@@ -154,7 +192,9 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
 const Photo = (
     props: RenderImageProps,
     context: RenderImageContext,
-    deleteLocalPhotos: (photoId: string) => void
-) => <PhotoComponent renderProps={props} context={context} deleteLocalPhotos={deleteLocalPhotos} />;
+    deleteLocalPhotos: (photoId: string) => void,
+    toggleSelect?: (id: string) => void,
+    isSelected?: boolean,
+) => <PhotoComponent renderProps={props} context={context} deleteLocalPhotos={deleteLocalPhotos} toggleSelect={toggleSelect} isSelected={isSelected} />;
 
 export { Photo };
