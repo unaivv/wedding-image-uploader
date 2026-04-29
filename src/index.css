@@ -78,6 +78,12 @@ body {
   padding: 0 2rem 2rem;
 }
 
+@media (max-width: 700px) {
+  #root {
+    padding: 0 0.75rem 1rem;
+  }
+}
+
 a {
   color: var(--accent);
   text-decoration: none;

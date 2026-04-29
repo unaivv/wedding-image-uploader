@@ -46,3 +46,18 @@
     padding: 2rem;
     box-shadow: var(--shadow-sm);
 }
+
+@media (max-width: 700px) {
+    .page {
+        padding-top: 1rem;
+    }
+
+    .heading {
+        font-size: 1.5rem;
+    }
+
+    .card {
+        padding: 1.25rem;
+        border-radius: var(--radius-md);
+    }
+}

@@ -5,6 +5,11 @@
     background: rgba(0, 0, 0, 0.96);
     display: flex;
     flex-direction: row;
+    /* Prevent page scroll bleed on iOS */
+    overscroll-behavior: contain;
+    touch-action: none;
+    /* Use dynamic viewport so iOS address bar doesn't cut content */
+    height: 100dvh;
 }
 
 /* ── Main panel ─────────────────────────────────────────── */
@@ -43,7 +48,7 @@
     border: none;
     color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
-    padding: 8px;
+    padding: 10px;
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
@@ -51,6 +56,9 @@
     font-size: 1.1rem;
     transition: color 0.15s, background 0.15s;
     position: relative;
+    /* Larger tap target on mobile */
+    min-width: 44px;
+    min-height: 44px;
 
     &:hover {
         color: #fff;
@@ -91,6 +99,8 @@
     justify-content: center;
     min-height: 0;
     overflow: hidden;
+    /* Allow horizontal swipe, block vertical scroll */
+    touch-action: pan-x;
 }
 
 .imageWrap {
@@ -133,6 +143,8 @@
     transition: background 0.15s, color 0.15s;
     z-index: 1;
     backdrop-filter: blur(4px);
+    /* Larger tap target */
+    min-height: 56px;
 
     &:hover {
         background: rgba(0, 0, 0, 0.7);
@@ -140,8 +152,8 @@
     }
 }
 
-.navPrev { left: 12px; }
-.navNext { right: 12px; }
+.navPrev { left: 8px; }
+.navNext { right: 8px; }
 
 /* ── Caption ────────────────────────────────────────────── */
 .caption {
@@ -170,9 +182,15 @@
         flex-direction: column;
     }
 
+    .toolbar {
+        padding: 8px 12px;
+    }
+
     .commentsSide {
         width: 100%;
-        height: 40%;
+        /* Use dynamic viewport so keyboard doesn't crush the panel */
+        height: 45dvh;
+        flex-shrink: 0;
         border-left: none;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -180,5 +198,10 @@
     .navBtn {
         font-size: 1.8rem;
         padding: 8px 6px;
+    }
+
+    .caption {
+        font-size: 0.8rem;
+        padding: 6px 12px 8px;
     }
 }
