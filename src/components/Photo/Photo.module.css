@@ -217,3 +217,12 @@ div:hover > .removeButton {
     padding: 2px 0;
     font-size: 0.85em;
 }
+
+.commentCount {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-left: 4px;
+}

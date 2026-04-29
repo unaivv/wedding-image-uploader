@@ -327,7 +327,7 @@ const AllPhotos = () => {
                             setIndex(current);
                         }}
                         padding={2.5}
-                        render={{ image: (props, context) => Photo(props, context, deleteLocalPhotos, toggleSelect, selectedIds.has((context.photo as IPhoto).id)) }}
+                        render={{ image: (props, context) => Photo(props, context, deleteLocalPhotos, toggleSelect, selectedIds.has((context.photo as IPhoto).id), commentCounts[(context.photo as IPhoto).id] ?? 0) }}
                     />
                     {index >= 0 && (
                         <Lightbox

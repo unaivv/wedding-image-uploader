@@ -11,6 +11,7 @@ import { auth } from "../../utils/auth";
 import { cn } from "../../utils/cn";
 import { logger } from "../../utils/logger";
 import ArrowDownLineIcon from '@rsuite/icons/ArrowDownLine';
+import MessageIcon from '@rsuite/icons/Message';
 
 const HeartFilled = () => (
     <svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" aria-hidden="true">
@@ -30,9 +31,10 @@ interface PhotoComponentProps {
     deleteLocalPhotos: (photoId: string) => void;
     toggleSelect?: (id: string) => void;
     isSelected?: boolean;
+    commentCount?: number;
 }
 
-const PhotoComponent = ({ renderProps, context, deleteLocalPhotos, toggleSelect, isSelected }: PhotoComponentProps) => {
+const PhotoComponent = ({ renderProps, context, deleteLocalPhotos, toggleSelect, isSelected, commentCount = 0 }: PhotoComponentProps) => {
     const { alt = "", title, sizes } = renderProps;
     const { photo, width, height } = context;
     const toaster = useToaster();
@@ -165,6 +167,12 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos, toggleSelect,
                     <span>{userName?.split('@')[0]}</span>
                 </div>
                 <div className={styles.actions} style={{ position: "relative" }}>
+                    {commentCount > 0 && (
+                        <span className={styles.commentCount}>
+                            <MessageIcon fontSize="0.8em" />
+                            {commentCount}
+                        </span>
+                    )}
                     <button
                         type="button"
                         className={cn(styles.likeButton, liked && styles.liked)}
@@ -202,6 +210,7 @@ const Photo = (
     deleteLocalPhotos: (photoId: string) => void,
     toggleSelect?: (id: string) => void,
     isSelected?: boolean,
-) => <PhotoComponent renderProps={props} context={context} deleteLocalPhotos={deleteLocalPhotos} toggleSelect={toggleSelect} isSelected={isSelected} />;
+    commentCount?: number,
+) => <PhotoComponent renderProps={props} context={context} deleteLocalPhotos={deleteLocalPhotos} toggleSelect={toggleSelect} isSelected={isSelected} commentCount={commentCount} />;
 
 export { Photo };
