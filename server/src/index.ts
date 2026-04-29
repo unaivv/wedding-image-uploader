@@ -7,7 +7,10 @@ import users from "./routes/user";
 import challenges from "./routes/challenge";
 import path from "path";
 import cors from "cors";
-import 'dotenv/config'
+import dotenv from "dotenv";
+
+// Explicit path so dotenv works regardless of CWD (dist/index.js → ../.env)
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
 const port = process.env.PORT || "3000";
