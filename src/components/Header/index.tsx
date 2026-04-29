@@ -1,5 +1,5 @@
 import { Button, Toggle } from 'rsuite';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useThemeContext } from '../../context/ThemeContext';
 import { auth } from '../../utils/auth';
 import ExitIcon from '@rsuite/icons/Exit';
@@ -7,6 +7,10 @@ import styles from './Header.module.css';
 
 const Header = () => {
     const { theme, toggleTheme } = useThemeContext();
+    const { pathname } = useLocation();
+    const isAdmin = auth.isAdmin();
+    const inAdmin = pathname.startsWith('/admin');
+
     return (
         <header className={styles.header}>
             <div className={styles.titleGroup}>
@@ -14,10 +18,11 @@ const Header = () => {
                 <span className={styles.subtitle}>Álbum de nuestra boda</span>
             </div>
             <div className={styles.controls}>
-                {auth.isAdmin() && (
-                    <Link to="/admin">
-                        <Button size="sm" appearance="subtle">Admin</Button>
-                    </Link>
+                {inAdmin && (
+                    <Link to="/"><Button size="sm" appearance="subtle">← Inicio</Button></Link>
+                )}
+                {isAdmin && !inAdmin && (
+                    <Link to="/admin"><Button size="sm" appearance="subtle">Admin</Button></Link>
                 )}
                 <Toggle
                     checked={theme === 'light'}
