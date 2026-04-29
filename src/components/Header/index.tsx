@@ -6,14 +6,19 @@ const Header = () => {
     const { theme, toggleTheme } = useThemeContext();
     return (
         <header className={styles.header}>
-            <span className={styles.title}>Unai & Marifeli 💍</span>
-            <Toggle
-                checked={theme === 'light'}
-                onChange={toggleTheme}
-                checkedChildren="☀️"
-                unCheckedChildren="🌙"
-                size="sm"
-            />
+            <div className={styles.titleGroup}>
+                <span className={styles.title}>Unai & Marifeli 💍</span>
+                <span className={styles.subtitle}>Álbum de nuestra boda</span>
+            </div>
+            <div className={styles.controls}>
+                <Toggle
+                    checked={theme === 'light'}
+                    onChange={toggleTheme}
+                    checkedChildren="☀️"
+                    unCheckedChildren="🌙"
+                    size="sm"
+                />
+            </div>
         </header>
     );
 };

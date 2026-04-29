@@ -13,7 +13,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     const toaster = useToaster();
     const [now, setNow] = useState(new Date());
     const [file, setFile] = useState<FileType | null>(() => {
-        const backendFile = challenge.participants.find(participant => participant.user._id === auth.getUserId())?.file || null;
+        const backendFile = challenge.participants.find(p => p.user._id === auth.getUserId())?.file || null;
         if (!backendFile) return null;
         return {
             name: backendFile.id,
@@ -30,7 +30,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
 
     const renderFile = () => {
         if (file === null) {
-            return <p className={styles.error}>No has subido ninguna foto a este reto.</p>;
+            return <p className={styles.noUpload}>No subiste ninguna foto a este reto.</p>;
         }
         return (
             <div className={styles.uploadUniqueImage}>
@@ -52,7 +52,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                         }
                     }}
                 >
-                    <CloseIcon fontSize={'16px'} />
+                    <CloseIcon fontSize={'14px'} />
                 </button>
                 <Image
                     src={
@@ -63,7 +63,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                                 : file.url
                     }
                     alt={file.name}
-                    style={{ width: '100%', height: 'auto', marginBottom: 10 }}
+                    style={{ width: '100%', height: 'auto' }}
                 />
             </div>
         );
@@ -74,14 +74,14 @@ const Challenge = ({ challenge }: IChallengeProps) => {
         const winnerFile = winnerParticipant?.file;
         return (
             <div className={styles.challengeCard}>
-                <h2>{challenge.title}</h2>
-                <p>{challenge.description}</p>
-                <div style={{ margin: "16px 0" }}>
-                    <strong>Ganador🥇:</strong> {challenge.winner.name}
+                <div>
+                    <h2>{challenge.title}</h2>
+                    <p>{challenge.description}</p>
+                    <div className={styles.winnerBadge}>🥇 {challenge.winner.name}</div>
                 </div>
                 {winnerFile && (
                     <div className={styles.uploadUniqueImage}>
-                        <Image src={winnerFile.compressedSrc} alt={winnerFile.id} style={{ width: '100%', height: 'auto', marginBottom: 10 }} />
+                        <Image src={winnerFile.compressedSrc} alt={winnerFile.id} style={{ width: '100%', height: 'auto' }} />
                     </div>
                 )}
             </div>
@@ -89,12 +89,12 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     }
 
     return (
-        <div key={challenge.id} className={styles.challengeCard}>
+        <div className={styles.challengeCard}>
             <div>
                 <h2>{challenge.title}</h2>
                 <p>{challenge.description}</p>
-                <p><strong>Topic:</strong> {challenge.topic}</p>
-                <p><strong>Quedan</strong> {renderCountdown(challenge.endDate, now)}</p>
+                <p>{challenge.topic}</p>
+                <span className={styles.countdown}>⏱ {renderCountdown(challenge.endDate, now)}</span>
             </div>
             {file
                 ? renderFile()

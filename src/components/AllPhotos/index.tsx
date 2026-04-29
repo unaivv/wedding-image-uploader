@@ -80,7 +80,8 @@ const AllPhotos = () => {
                 setLightboxPhotos(data.files.map(p => toPhoto(p, true)));
                 setHasMore(data.hasMore);
             })
-            .catch(() => {
+            .catch((err: unknown) => {
+                logger.error('initial load failed', err);
                 setError(true);
                 toaster.push(<Message type="error" showIcon closable>Error cargando las fotos</Message>, { placement: 'topEnd' });
             })
@@ -181,33 +182,37 @@ const AllPhotos = () => {
         share: { url: `${window.location.origin}/?photo=${p.id}`, title: 'Unai & Marifeli 💍' },
     }));
 
+    const activeFilterCount = [selectedUserId, dateFrom, dateTo].filter(Boolean).length;
+
     return (
-        <div className={styles.allPhotosConatiner}>
-            <div className={styles.actions}>
-                <div className={styles.left}>
+        <div className={styles.container}>
+            <div className={styles.toolbar}>
+                <div className={styles.toolbarLeft}>
                     <Link to="/subir">
-                        <Button appearance="ghost" endIcon={<PlusIcon />}>Subir fotos</Button>
+                        <Button appearance="primary" size="sm" endIcon={<PlusIcon />}>Subir fotos</Button>
                     </Link>
-                    <Button appearance="ghost" onClick={() => setRefreshKey(k => k + 1)} style={{ marginLeft: 8 }} endIcon={<ReloadIcon />}>
+                    <Button size="sm" appearance="subtle" onClick={() => setRefreshKey(k => k + 1)} endIcon={<ReloadIcon />}>
                         Refrescar
                     </Button>
-                    <Button appearance="ghost" onClick={handleDownload} loading={downloading} style={{ marginLeft: 8 }} endIcon={<ArrowDownLineIcon />}>
-                        Descargar todo
+                    <Button size="sm" appearance="subtle" onClick={handleDownload} loading={downloading} endIcon={<ArrowDownLineIcon />}>
+                        Descargar
                     </Button>
                 </div>
-                <div className={styles.right}>
-                    <div className={styles.sort}>
-                        <span>Ordenar por:</span>
-                        <Toggle size="lg" checkedChildren="Me gusta" unCheckedChildren="Fecha" checked={orderByLikes} onChange={(v: boolean) => setOrderByLikes(v)} />
+                <div className={styles.toolbarRight}>
+                    <div className={styles.toggleGroup}>
+                        <span>Ordenar</span>
+                        <Toggle size="md" checkedChildren="❤️" unCheckedChildren="📅" checked={orderByLikes} onChange={(v: boolean) => setOrderByLikes(v)} />
                     </div>
-                    <div className={styles.filters}>
-                        <span>Filtrar:</span>
-                        <Toggle size="lg" checkedChildren="Todas" unCheckedChildren="Mias" checked={seeAllFotos === 'true'} onChange={(v: boolean) => setAllPhotos(v ? 'true' : 'false')} />
+                    <div className={styles.toggleGroup}>
+                        <span>Fotos</span>
+                        <Toggle size="md" checkedChildren="Todas" unCheckedChildren="Mías" checked={seeAllFotos === 'true'} onChange={(v: boolean) => setAllPhotos(v ? 'true' : 'false')} />
                     </div>
                 </div>
             </div>
 
-            <div className={styles.extraFilters}>
+            <div className={styles.filterBar}>
+                <span className={styles.filterLabel}>Filtrar</span>
+                <div className={styles.filterDivider} />
                 <SelectPicker
                     data={uniqueUsers.map(u => ({ label: u.name || u.email, value: u._id }))}
                     value={selectedUserId}
@@ -215,7 +220,7 @@ const AllPhotos = () => {
                     placeholder="Fotógrafo"
                     cleanable
                     size="sm"
-                    style={{ width: 160 }}
+                    style={{ width: 150 }}
                 />
                 <input
                     type="date"
@@ -231,10 +236,14 @@ const AllPhotos = () => {
                     className={styles.dateInput}
                     title="Hasta"
                 />
-                {(selectedUserId || dateFrom || dateTo) && (
-                    <Button size="xs" appearance="subtle" onClick={() => { setSelectedUserId(null); setDateFrom(''); setDateTo(''); }}>
-                        Limpiar
-                    </Button>
+                {activeFilterCount > 0 && (
+                    <button
+                        type="button"
+                        className={styles.activeCount}
+                        onClick={() => { setSelectedUserId(null); setDateFrom(''); setDateTo(''); }}
+                    >
+                        × {activeFilterCount} {activeFilterCount === 1 ? 'filtro' : 'filtros'}
+                    </button>
                 )}
             </div>
 
@@ -246,8 +255,12 @@ const AllPhotos = () => {
                 </div>
             )}
 
-            {!loading && error && photos.length === 0 && <p>Error cargando las fotos</p>}
-            {!loading && !error && photos.length === 0 && <p>No hay fotos</p>}
+            {!loading && error && photos.length === 0 && (
+                <div className={styles.emptyState}><span>📷</span><span>Error cargando las fotos</span></div>
+            )}
+            {!loading && !error && photos.length === 0 && (
+                <div className={styles.emptyState}><span>🖼️</span><span>Todavía no hay fotos</span></div>
+            )}
 
             {sortedPhotos.length > 0 && (
                 <>

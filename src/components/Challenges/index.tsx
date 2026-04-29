@@ -25,33 +25,27 @@ const ChallengesPage = () => {
 
     const renderChallenges = () => {
         if (challenges === undefined) {
-            return (
-                <div style={{ display: 'flex', gap: 12 }}>
-                    {Array.from({ length: 3 }).map((_, i) => (
-                        <Placeholder.Graph key={i} active style={{ width: 220, height: 280, borderRadius: 8 }} />
-                    ))}
-                </div>
-            );
+            return Array.from({ length: 3 }).map((_, i) => (
+                <Placeholder.Graph key={`challenge-skeleton-${i}`} active style={{ width: 280, height: 300, borderRadius: 10, flexShrink: 0 }} />
+            ));
         }
 
         if (challenges === null) {
             return <p className={styles.error}>No se han encontrado retos fotográficos.</p>;
         }
 
-        return challenges.map((challenge) => <ChallengeComponent challenge={challenge} key={challenge.id} />)
-    }
+        return challenges.map((challenge) => <ChallengeComponent challenge={challenge} key={challenge.id} />);
+    };
 
     return (
         <div className={styles.container}>
-            <h2>Retos fotográficos</h2>
+            <h2 className={styles.title}>Retos fotográficos 🏆</h2>
             <p className={styles.description}>
-                Participa en nuestros retos fotográficos. Cada reto cuenta con un tema específico. Sube tus fotos y participa para ganar premios.
+                Participá en los retos temáticos y ganá premios. Subí tu mejor foto para cada reto antes de que venza el tiempo.
             </p>
             <div className={styles.sliderWrapper}>
                 <div className={styles.challengesSlider} ref={sliderRef}>
-                    {
-                        renderChallenges()
-                    }
+                    {renderChallenges()}
                 </div>
             </div>
         </div>

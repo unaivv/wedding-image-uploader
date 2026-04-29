@@ -1,45 +1,68 @@
 .container {
-    margin: 0 auto;
-    margin-bottom: 40px;
+    margin-bottom: 2.5rem;
+}
 
-    h2 {
-        margin-top: 0;
-        margin-bottom: 16px;
-        font-size: 1.5em;
-    }
+.title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 0.35rem;
+    color: var(--text-primary);
+}
+
+.description {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.6;
 }
 
 .sliderWrapper {
     position: relative;
-    display: flex;
-    align-items: center;
-    margin-top: 24px;
     width: calc(100% + 4rem);
     margin-left: -2rem;
+    margin-top: 1.25rem;
+}
+
+.sliderWrapper::before,
+.sliderWrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2.5rem;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.sliderWrapper::before {
+    left: 0;
+    background: linear-gradient(to right, var(--bg), transparent);
+}
+
+.sliderWrapper::after {
+    right: 0;
+    background: linear-gradient(to left, var(--bg), transparent);
 }
 
 .challengesSlider {
     display: flex;
-    gap: 24px;
+    gap: 16px;
     overflow-x: auto;
     scroll-behavior: smooth;
-    padding-bottom: 12px;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding: 4px 2rem 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-border) transparent;
+
+    &::-webkit-scrollbar { height: 4px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb {
+        background: var(--accent-border);
+        border-radius: 4px;
+    }
 }
 
-.description {
-    color: #b8b8b8;
-    font-size: 0.9em;
-    margin-bottom: 0.5em;
-    margin-top: 0;
-}
-
-.uploadButton {
-    margin-top: 8px;
-    padding: 8px 16px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.2s;
+.error {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
 }
