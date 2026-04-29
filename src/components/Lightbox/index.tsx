@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { IPhoto } from '../AllPhotos/types';
 import { Comments } from '../Comments';
 import { downloadPhoto } from '../AllPhotos/service';
@@ -87,7 +88,7 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {} }:
 
     const commentCount = commentCounts[photo.id] ?? 0;
 
-    return (
+    return createPortal(
         <div className={styles.overlay} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
             <div className={styles.main}>
                 <div className={styles.toolbar}>
@@ -152,7 +153,8 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {} }:
                     <Comments fileId={photo.id} />
                 </div>
             )}
-        </div>
+        </div>,
+        document.body
     );
 };
 
