@@ -1,3 +1,5 @@
+// env MUST be first — populates process.env before any other module reads it
+import './env';
 import express from "express";
 import rateLimit from "express-rate-limit";
 import { router as files } from "./routes/files";
@@ -7,10 +9,6 @@ import users from "./routes/user";
 import challenges from "./routes/challenge";
 import path from "path";
 import cors from "cors";
-import dotenv from "dotenv";
-
-// Explicit path so dotenv works regardless of CWD (dist/index.js → ../.env)
-dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
 const port = process.env.PORT || "3000";
