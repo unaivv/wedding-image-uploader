@@ -24,17 +24,20 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
     const [loading, setLoading] = useState(false);
     const isHolding = useRef(false);
 
-    const userName = (photo as IPhoto).user.name || (photo as IPhoto).user.email || 'User';
-    const canDelete = auth.getUserId() === (photo as IPhoto).user._id;
+    const iPhoto = photo as IPhoto;
+    const photoId = iPhoto.id || "";
+    const photoUser = iPhoto.user;
+    const userName = photoUser.name || photoUser.email || 'User';
+    const canDelete = auth.getUserId() === photoUser._id;
 
     const [liked, setLiked] = useState(
-        ((photo as IPhoto).likedBy || []).some(
+        (iPhoto.likedBy || []).some(
             (user) => (typeof user === "object" ? user._id : user) === (auth.getUserId() || "")
         )
     );
 
     const [likes, setLikes] = useState<{ id: string; name: string }[]>(
-        ((photo as IPhoto).likedBy || [])
+        (iPhoto.likedBy || [])
             .filter((user) => typeof user === "object")
             .map((user) => ({ id: user._id, name: user.name || user.email || 'User' }))
     );
@@ -43,10 +46,10 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
         e.stopPropagation();
         if (loading || !canDelete) return;
         setLoading(true);
-        deleteFile((photo as IPhoto).id || "")
+        deleteFile(photoId)
             .then((success) => {
                 if (success) {
-                    deleteLocalPhotos((photo as IPhoto).id || "");
+                    deleteLocalPhotos(photoId);
                     toaster.push(
                         <Message type="success" showIcon closable>Foto eliminada</Message>,
                         { placement: 'topEnd' }
@@ -71,7 +74,7 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
     const handleLike = (e: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         if (isHolding.current) return;
-        likeFile((photo as IPhoto).id || "", auth.getUserId() || "")
+        likeFile(photoId, auth.getUserId() || "")
             .then((isLiked) => {
                 setLiked(isLiked);
                 const userId = auth.getUserId();
@@ -91,7 +94,7 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
     };
 
     return (
-        <div style={{ width, height: height + 30, position: "relative" }}>
+        <div className={styles.photoCard} style={{ width, height: height + 30, position: "relative" }}>
             {loading && (
                 <div className={styles.loadingOverlay}>
                     <Loader size="md" content="Borrando..." />
@@ -112,7 +115,7 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
             <div className={styles.photoBottom}>
                 <div className={styles.userNameWrapper}>
                     <div className={styles.avatar}>
-                        <Image src={(photo as IPhoto).user.picture} alt={userName} circle style={{ width: '20px', height: '20px' }} />
+                        <Image src={photoUser.picture} alt={userName} circle style={{ width: '20px', height: '20px' }} />
                     </div>
                     <span>{userName?.split('@')[0]}</span>
                 </div>
@@ -122,26 +125,26 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                         className={cn(styles.likeButton, liked && styles.liked)}
                         onClick={handleLike}
                     >
-                        {liked ? '❤️' : '🤍'}{' '}
-                        <Whisper
-                            placement="top"
-                            trigger="click"
-                            speaker={
-                                <Tooltip onClick={(e) => e.stopPropagation()}>
-                                    {likes.length > 0
-                                        ? likes.map((like) => (
-                                            <div key={like.id} className={styles.likeUser} onClick={(e) => e.stopPropagation()}>{like.name}</div>
-                                        ))
-                                        : <div>No hay usuarios que les guste</div>
-                                    }
-                                </Tooltip>
-                            }
-                        >
-                            <button type="button" onClick={(e) => e.stopPropagation()} className={styles.likeCount}>
-                                {likes.length}<ArrowDownLineIcon />
-                            </button>
-                        </Whisper>
+                        {liked ? '❤️' : '🤍'}
                     </button>
+                    <Whisper
+                        placement="top"
+                        trigger="click"
+                        speaker={
+                            <Tooltip onClick={(e) => e.stopPropagation()}>
+                                {likes.length > 0
+                                    ? likes.map((like) => (
+                                        <div key={like.id} className={styles.likeUser} onClick={(e) => e.stopPropagation()}>{like.name}</div>
+                                    ))
+                                    : <div>No hay usuarios que les guste</div>
+                                }
+                            </Tooltip>
+                        }
+                    >
+                        <button type="button" onClick={(e) => e.stopPropagation()} className={styles.likeCount}>
+                            {likes.length}<ArrowDownLineIcon />
+                        </button>
+                    </Whisper>
                 </div>
             </div>
         </div>

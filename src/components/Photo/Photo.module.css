@@ -1,3 +1,16 @@
+.photoCard {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    transition: box-shadow 0.2s, transform 0.15s;
+
+    &:hover {
+        box-shadow: var(--shadow-md);
+    }
+}
+
 .loadingOverlay {
     position: absolute;
     top: 0;

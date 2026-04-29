@@ -103,3 +103,15 @@ h1, h2, h3 {
   font-weight: 600;
   line-height: 1.2;
 }
+
+/* ── RSuite font normalization ──────────────────────────── */
+.rs-input,
+.rs-picker-input input,
+.rs-picker-toggle-value,
+.rs-picker-toggle-placeholder,
+.rs-picker-menu .rs-picker-select-menu-item,
+.rs-picker-menu .rs-check-item,
+.rs-dropdown-item {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+}

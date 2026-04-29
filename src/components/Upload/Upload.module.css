@@ -4,6 +4,12 @@
     & :global(.rs-uploader-file-item-btn-remove.rs-btn-close) {
         display: none;
     }
+
+    & :global(.rs-uploader-trigger),
+    & :global(.rs-uploader-trigger-btn) {
+        width: 100%;
+        display: block;
+    }
 }
 
 .captionInput {

@@ -16,7 +16,7 @@ const Header = () => {
                     onChange={toggleTheme}
                     checkedChildren="☀️"
                     unCheckedChildren="🌙"
-                    size="sm"
+                    size="lg"
                 />
             </div>
         </header>
