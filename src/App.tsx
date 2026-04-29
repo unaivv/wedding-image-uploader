@@ -8,21 +8,28 @@ import { UploadPage } from './pages/upload';
 import { Login } from './pages/login';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import PrivateRoute from './components/PrivateRoute';
+import { ThemeContext } from './context/ThemeContext';
+import { useTheme } from './hooks/useTheme';
 
-const App = () => (
-  <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-    <BrowserRouter>
-      <CustomProvider theme="dark">
-        <Routes>
-          <Route element={<PrivateRoute />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="subir" element={<UploadPage />} />
-          </Route>
-          <Route path="login" element={<Login />} />
-        </Routes>
-      </CustomProvider>
-    </BrowserRouter>
-  </GoogleOAuthProvider>
-);
+const App = () => {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <ThemeContext.Provider value={{ theme, toggleTheme }}>
+        <BrowserRouter>
+          <CustomProvider theme={theme}>
+            <Routes>
+              <Route element={<PrivateRoute />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="subir" element={<UploadPage />} />
+              </Route>
+              <Route path="login" element={<Login />} />
+            </Routes>
+          </CustomProvider>
+        </BrowserRouter>
+      </ThemeContext.Provider>
+    </GoogleOAuthProvider>
+  );
+};
 
 export { App };

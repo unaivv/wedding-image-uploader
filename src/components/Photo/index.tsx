@@ -7,6 +7,7 @@ import { deleteFile, likeFile } from "../Upload/service";
 import { useState, useRef } from "react";
 import { auth } from "../../utils/auth";
 import { cn } from "../../utils/cn";
+import { logger } from "../../utils/logger";
 import ArrowDownLineIcon from '@rsuite/icons/ArrowDownLine';
 
 interface PhotoComponentProps {
@@ -58,7 +59,7 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                 );
             })
             .catch((err: unknown) => {
-                console.error('delete photo failed', err);
+                logger.error('delete photo failed', err);
                 toaster.push(
                     <Message type="error" showIcon closable>Error al eliminar la foto</Message>,
                     { placement: 'topEnd' }
@@ -81,7 +82,7 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                 }
             })
             .catch((err: unknown) => {
-                console.error('like failed', err);
+                logger.error('like failed', err);
                 toaster.push(
                     <Message type="error" showIcon closable>Error al procesar el me gusta</Message>,
                     { placement: 'topEnd' }
@@ -128,8 +129,8 @@ const PhotoComponent = ({ renderProps, context, deleteLocalPhotos }: PhotoCompon
                             speaker={
                                 <Tooltip onClick={(e) => e.stopPropagation()}>
                                     {likes.length > 0
-                                        ? likes.map((like, idx) => (
-                                            <div key={idx} className={styles.likeUser} onClick={(e) => e.stopPropagation()}>{like.name}</div>
+                                        ? likes.map((like) => (
+                                            <div key={like.id} className={styles.likeUser} onClick={(e) => e.stopPropagation()}>{like.name}</div>
                                         ))
                                         : <div>No hay usuarios que les guste</div>
                                     }

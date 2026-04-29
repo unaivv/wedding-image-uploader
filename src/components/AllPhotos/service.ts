@@ -29,6 +29,15 @@ export const getAllPhotos = async (eventId: string, page = 1, limit = 20, userId
     };
 };
 
+export const getPhotoById = async (id: string): Promise<IPhotosFromBackend> => {
+    const data = await get<IPhotosFromBackend & { _id?: string }>({
+        url: `${import.meta.env.VITE_BACKEND_URL}/files/${id}`,
+        auth: true,
+    });
+    const { _id, ...rest } = data;
+    return { ...rest, id: _id ?? rest.id } as IPhotosFromBackend;
+};
+
 export const downloadAllPhotos = async (eventId: string): Promise<void> => {
     const url = `${import.meta.env.VITE_BACKEND_URL}/files/download-all?eventId=${eventId}`;
     const response = await fetch(url, {

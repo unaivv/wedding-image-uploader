@@ -1,4 +1,3 @@
-"use client";
 import { Button, Message, Uploader, useToaster } from 'rsuite';
 import { auth } from '../../utils/auth';
 import { useRef, useState } from 'react';
@@ -8,6 +7,7 @@ import CloseIcon from '@rsuite/icons/Close';
 import CheckRoundIcon from '@rsuite/icons/CheckRound';
 import type { IUploadProps } from './types';
 import { cn } from '../../utils/cn';
+import { logger } from '../../utils/logger';
 
 const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUploadProps) => {
     const userEmail = auth.getUserEmail();
@@ -19,6 +19,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
     const [loading, setLoading] = useState(false);
     const [files, setFiles] = useState<FileType[]>([]);
     const [progress, setProgress] = useState<Map<string | number, number>>(new Map());
+    const [caption, setCaption] = useState('');
 
     const renderUploadInterior = () => {
         if (onlyButton) {
@@ -47,6 +48,16 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
 
     return (
         <div className={styles.upload}>
+            {!onlyButton && (
+                <textarea
+                    value={caption}
+                    onChange={e => setCaption(e.target.value)}
+                    placeholder="Añadí un caption (opcional)"
+                    maxLength={200}
+                    rows={2}
+                    className={styles.captionInput}
+                />
+            )}
             <Button
                 appearance="primary"
                 style={{ marginTop: 20, width: '100%' }}
@@ -65,6 +76,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                 data={{
                     eventId: import.meta.env.VITE_EVENT_ID,
                     userId: auth.getUserId(),
+                    caption,
                     ...extraParams
                 }}
                 style={{ width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch' }}
@@ -135,8 +147,9 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                         );
                     }
                 }}
-                onError={() => {
+                onError={(reason) => {
                     setLoading(false);
+                    logger.error('upload failed', reason);
                     toaster.push(
                         <Message type="error" showIcon closable>Error al subir la foto. Intentá de nuevo.</Message>,
                         { placement: 'topEnd' }

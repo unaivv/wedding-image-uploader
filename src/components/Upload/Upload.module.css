@@ -37,6 +37,18 @@
         z-index: 2;
     }
 
+    .captionInput {
+        width: 100%;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid var(--rs-border-primary);
+        background: var(--rs-input-bg);
+        color: var(--rs-text-primary);
+        font-size: 13px;
+        resize: vertical;
+        margin-bottom: 8px;
+    }
+
     .progressOverlay {
         position: absolute;
         bottom: 0;

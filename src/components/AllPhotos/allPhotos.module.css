@@ -19,6 +19,24 @@
             gap: 8px;
         }
 
+        .extraFilters {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .dateInput {
+            height: 30px;
+            padding: 0 8px;
+            border-radius: 6px;
+            border: 1px solid var(--rs-border-primary);
+            background: var(--rs-input-bg);
+            color: var(--rs-text-primary);
+            font-size: 12px;
+        }
+
         .right {
             display: flex;
             align-items: center;

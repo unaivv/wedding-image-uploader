@@ -21,19 +21,13 @@ const fetchService = async <T>({
             headers['google-token'] = userAuth.getToken() || '';
         }
 
-        const fetchOptions: RequestInit = {
-            ...options,
-            headers,
-        };
-
-        const response = await fetch(url, fetchOptions);
+        const response = await fetch(url, { ...options, headers });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        return data;
+        return await response.json() as T;
     } catch (error) {
         if (error instanceof Error && (error.message.includes('status: 401') || error.message.includes('status: 403'))) {
             userAuth.logout();
@@ -42,41 +36,29 @@ const fetchService = async <T>({
     }
 };
 
-export const post = async <T>({
-    url,
-    body,
-    options = {},
-    auth = false
-}: {
-    url: string;
-    body: unknown;
-    options?: RequestInit;
-    auth?: boolean;
+export const get = async <T>({ url, params = {}, options = {}, auth = false }: {
+    url: string; params?: Record<string, string>; options?: RequestInit; auth?: boolean;
 }): Promise<T> => {
-    const fetchOptions: RequestInit = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(options.headers || {})
-        },
-        body: JSON.stringify(body),
-        ...options,
-    };
-    return fetchService<T>({ url, options: fetchOptions, auth });
+    const qs = new URLSearchParams(params).toString();
+    return fetchService<T>({ url: qs ? `${url}?${qs}` : url, options, auth });
 };
 
-export const get = async <T>({
+export const post = async <T>({ url, body, options = {}, auth = false }: {
+    url: string; body: unknown; options?: RequestInit; auth?: boolean;
+}): Promise<T> => fetchService<T>({
     url,
-    params = {},
-    options = {},
-    auth = false
-}: {
-    url: string;
-    params?: Record<string, string>;
-    options?: RequestInit;
-    auth?: boolean;
-}): Promise<T> => {
-    const queryString = new URLSearchParams(params).toString();
-    const fullUrl = queryString ? `${url}?${queryString}` : url;
-    return fetchService<T>({ url: fullUrl, options, auth }) as Promise<T>;
-};
+    options: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), ...options },
+    auth,
+});
+
+export const patch = async <T>({ url, body = {}, auth = false }: {
+    url: string; body?: unknown; auth?: boolean;
+}): Promise<T> => fetchService<T>({
+    url,
+    options: { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) },
+    auth,
+});
+
+export const del = async <T>({ url, auth = false }: {
+    url: string; auth?: boolean;
+}): Promise<T> => fetchService<T>({ url, options: { method: 'DELETE' }, auth });

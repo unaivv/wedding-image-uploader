@@ -1,14 +1,13 @@
 import { AllPhotos } from "../components/AllPhotos";
 import { ChallengesPage as Challenges } from "../components/Challenges";
+import { Header } from "../components/Header";
 
-const HomePage = () => {
-    return (
-        <>
-            <h1>Unai Y MF</h1>
-            <Challenges />
-            <AllPhotos />
-        </>
-    );
-}
+const HomePage = () => (
+    <>
+        <Header />
+        <Challenges />
+        <AllPhotos />
+    </>
+);
 
 export { HomePage };

@@ -16,6 +16,8 @@ export interface IPhoto {
     alt: string
     user: IUser
     likedBy: IUser[]
+    caption?: string
+    createdAt?: string
 }
 
 export interface IPhotosFromBackend {
@@ -28,4 +30,5 @@ export interface IPhotosFromBackend {
     _id?: string
     userId: IUser
     likedBy: IUser[]
+    caption?: string
 }

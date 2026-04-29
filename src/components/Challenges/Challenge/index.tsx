@@ -1,4 +1,3 @@
-"use client";
 import type { IChallengeProps } from "./types";
 import styles from "./Challenge.module.css";
 import { renderCountdown } from "./util";
@@ -35,7 +34,8 @@ const Challenge = ({ challenge }: IChallengeProps) => {
         }
         return (
             <div className={styles.uploadUniqueImage}>
-                <span
+                <button
+                    type="button"
                     className={styles.remove}
                     onClick={(e) => {
                         e.stopPropagation();
@@ -53,7 +53,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                     }}
                 >
                     <CloseIcon fontSize={'16px'} />
-                </span>
+                </button>
                 <Image
                     src={
                         file.blobFile instanceof File

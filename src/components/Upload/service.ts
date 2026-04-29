@@ -1,28 +1,26 @@
-import { get } from "../../utils/fetch";
+import { del, patch } from "../../utils/fetch";
+import { logger } from "../../utils/logger";
 
 export const deleteFile = async (fileId: string): Promise<boolean> => {
     try {
-        await get({
-            url: `${import.meta.env.VITE_BACKEND_URL}/files/delete?fileId=${fileId}`,
-            auth: true
-        });
-
+        await del({ url: `${import.meta.env.VITE_BACKEND_URL}/files/${fileId}`, auth: true });
         return true;
-    } catch (error) {
-        console.error('Error deleting file:', error);
+    } catch (err) {
+        logger.error('deleteFile failed', err);
         return false;
     }
-}
+};
 
 export const likeFile = async (fileId: string, userId: string): Promise<boolean> => {
     try {
-        const likedresponse = await get<{ liked: boolean }>({
-            url: `${import.meta.env.VITE_BACKEND_URL}/files/like?fileId=${fileId}&userId=${userId}`,
-            auth: true
+        const response = await patch<{ liked: boolean }>({
+            url: `${import.meta.env.VITE_BACKEND_URL}/files/${fileId}/like`,
+            body: { userId },
+            auth: true,
         });
-        return likedresponse.liked;
-    } catch (error) {
-        console.error('Error liking file:', error);
+        return response.liked;
+    } catch (err) {
+        logger.error('likeFile failed', err);
         return false;
     }
-}
+};
