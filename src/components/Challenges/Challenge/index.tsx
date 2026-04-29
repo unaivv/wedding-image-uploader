@@ -88,6 +88,8 @@ const Challenge = ({ challenge }: IChallengeProps) => {
         );
     }
 
+    const isExpired = new Date(challenge.endDate).getTime() <= now.getTime();
+
     return (
         <div className={styles.challengeCard}>
             <div>
@@ -98,14 +100,16 @@ const Challenge = ({ challenge }: IChallengeProps) => {
             </div>
             {file
                 ? renderFile()
-                : <Upload
-                    onlyButton
-                    extraParams={{ challengeId: challenge.id }}
-                    onUpload={(files) => {
-                        if (files.length === 0) return;
-                        setFile(files[0]);
-                    }}
-                />
+                : !isExpired && (
+                    <Upload
+                        onlyButton
+                        extraParams={{ challengeId: challenge.id }}
+                        onUpload={(files) => {
+                            if (files.length === 0) return;
+                            setFile(files[0]);
+                        }}
+                    />
+                )
             }
         </div>
     );
