@@ -356,41 +356,41 @@ const AllPhotos = () => {
                         padding={2.5}
                         render={{ image: (props, context) => Photo(props, context, deleteLocalPhotos, toggleSelect, selectedIds.has((context.photo as IPhoto).id)) }}
                     />
-                    {index >= 0 && <div className={cn(styles.lightboxWrapper, commentsOpen && styles.lightboxWithComments)}>
-                        <Lightbox
-                            index={index}
-                            slides={lightboxSlides}
-                            open={index >= 0}
-                            close={() => { setIndex(-1); setSearchParams({}); stopSlideshow(); setCommentsOpen(false); }}
-                            on={{ view: ({ index: i }) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); } }}
-                            plugins={[Zoom, Captions, Share, Video]}
-                            zoom={{ maxZoomPixelRatio: 2, scrollToZoom: true }}
-                            captions={{ showToggle: true, descriptionMaxLines: 2 }}
-                            toolbar={{
-                                buttons: [
-                                    <button
-                                        key="comments"
-                                        type="button"
-                                        className={cn('yarl__button', styles.commentToggleBtn)}
-                                        onClick={() => setCommentsOpen(o => !o)}
-                                        title="Comentarios"
-                                    >
-                                        <MessageIcon fontSize="1.2em" />
-                                        {index >= 0 && sortedLightbox[index] && (commentCounts[sortedLightbox[index].id] ?? 0) > 0 && (
-                                            <span className={styles.commentBadge}>{commentCounts[sortedLightbox[index].id]}</span>
-                                        )}
-                                    </button>,
-                                    'close',
-                                ],
-                            }}
-                        />
-                        {commentsOpen && sortedLightbox[index] && (
+                    <Lightbox
+                        index={index}
+                        slides={lightboxSlides}
+                        open={index >= 0}
+                        close={() => { setIndex(-1); setSearchParams({}); stopSlideshow(); setCommentsOpen(false); }}
+                        on={{ view: ({ index: i }) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); } }}
+                        plugins={[Zoom, Captions, Share, Video]}
+                        zoom={{ maxZoomPixelRatio: 2, scrollToZoom: true }}
+                        captions={{ showToggle: true, descriptionMaxLines: 2 }}
+                        toolbar={{
+                            buttons: [
+                                <button
+                                    key="comments"
+                                    type="button"
+                                    className={cn('yarl__button', styles.commentToggleBtn)}
+                                    onClick={() => setCommentsOpen(o => !o)}
+                                    title="Comentarios"
+                                >
+                                    <MessageIcon fontSize="1.2em" />
+                                    {index >= 0 && sortedLightbox[index] && (commentCounts[sortedLightbox[index].id] ?? 0) > 0 && (
+                                        <span className={styles.commentBadge}>{commentCounts[sortedLightbox[index].id]}</span>
+                                    )}
+                                </button>,
+                                'close',
+                            ],
+                        }}
+                    />
+                    {commentsOpen && index >= 0 && sortedLightbox[index] && (
+                        <div className={styles.commentsOverlay}>
                             <Comments
                                 fileId={sortedLightbox[index].id}
                                 onNewComment={(fileId) => setCommentCounts(prev => ({ ...prev, [fileId]: (prev[fileId] ?? 0) + 1 }))}
                             />
-                        )}
-                    </div>}
+                        </div>
+                    )}
                 </>
             )}
 

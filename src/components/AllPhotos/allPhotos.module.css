@@ -159,24 +159,16 @@
     }
 }
 
-/* ── Lightbox + comments layout ─────────────────────────── */
-.lightboxWrapper {
+/* ── Lightbox comments overlay ───────────────────────────── */
+.commentsOverlay {
     position: fixed;
-    inset: 0;
-    z-index: 1000;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 300px;
+    z-index: 10000;
     display: flex;
-
-    & :global(.yarl__root) {
-        flex: 1;
-        position: relative;
-        min-width: 0;
-    }
-}
-
-.lightboxWithComments {
-    & :global(.yarl__root) {
-        right: 300px;
-    }
+    flex-direction: column;
 }
 
 .commentToggleBtn {
