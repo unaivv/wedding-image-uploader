@@ -12,6 +12,26 @@ const sendError = (res: Response, status: number, message: string) => {
     res.status(status).json({ error: message });
 };
 
+router.get('/counts', authenticateUser, async (req: Request, res: Response): Promise<void> => {
+    const raw = req.query.fileIds as string | undefined;
+    if (!raw) { res.json({ counts: {} }); return; }
+    const fileIds = raw.split(',').filter(Boolean);
+    try {
+        const rows = await useDatabase(async () =>
+            CommentModel.aggregate([
+                { $match: { fileId: { $in: fileIds } } },
+                { $group: { _id: '$fileId', count: { $sum: 1 } } },
+            ]).exec()
+        ) as { _id: string; count: number }[];
+        const counts: Record<string, number> = {};
+        for (const row of rows) counts[String(row._id)] = row.count;
+        res.json({ counts });
+    } catch (err) {
+        logger.error('get comment counts failed', err);
+        sendError(res, 500, 'Internal server error');
+    }
+});
+
 router.get('/:fileId', authenticateUser, async (req: Request, res: Response): Promise<void> => {
     const { fileId } = req.params;
     try {

@@ -39,6 +39,17 @@ export const postComment = async (fileId: string, text: string): Promise<ICommen
     return data.comment;
 };
 
+export const getCommentCounts = async (fileIds: string[]): Promise<Record<string, number>> => {
+    if (fileIds.length === 0) return {};
+    const res = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/comments/counts?fileIds=${fileIds.join(',')}`,
+        { headers: headers() }
+    );
+    if (!res.ok) throw new Error('Failed to fetch comment counts');
+    const data = await res.json() as { counts: Record<string, number> };
+    return data.counts;
+};
+
 export const deleteComment = async (commentId: string): Promise<void> => {
     const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/comments/${commentId}`, {
         method: 'DELETE',

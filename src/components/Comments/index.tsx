@@ -8,10 +8,9 @@ import CloseIcon from '@rsuite/icons/Close';
 
 interface CommentsProps {
     fileId: string;
-    onNewComment?: (fileId: string, comment: IComment) => void;
 }
 
-const Comments = ({ fileId, onNewComment }: CommentsProps) => {
+const Comments = ({ fileId }: CommentsProps) => {
     const toaster = useToaster();
     const [comments, setComments] = useState<IComment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -40,7 +39,6 @@ const Comments = ({ fileId, onNewComment }: CommentsProps) => {
         postComment(fileId, text.trim())
             .then(comment => {
                 setComments(prev => [...prev, comment]);
-                onNewComment?.(fileId, comment);
                 setText('');
             })
             .catch((err: unknown) => {

@@ -20,6 +20,7 @@ import PauseOutlineIcon from '@rsuite/icons/PauseOutline';
 import { useSSE } from "../../hooks/useSSE";
 import { logger } from "../../utils/logger";
 import type { IComment } from "../Comments/service";
+import { getCommentCounts } from "../Comments/service";
 
 const SLIDESHOW_SPEEDS = { slow: 5000, normal: 3000, fast: 1500 } as const;
 type SlideshowSpeed = keyof typeof SLIDESHOW_SPEEDS;
@@ -84,10 +85,12 @@ const AllPhotos = () => {
         if (!auth.isLoggedIn() || !userId) { setLoading(false); return; }
 
         getAllPhotos(import.meta.env.VITE_EVENT_ID, 1, PAGE_LIMIT, seeAllFotos === 'true' ? undefined : userId)
-            .then(data => {
+            .then(async data => {
                 setPhotos(data.files.map(p => toPhoto(p, false)));
                 setLightboxPhotos(data.files.map(p => toPhoto(p, true)));
                 setHasMore(data.hasMore);
+                const counts = await getCommentCounts(data.files.map(f => f.id)).catch(() => ({}));
+                setCommentCounts(counts);
             })
             .catch((err: unknown) => {
                 logger.error('initial load failed', err);
@@ -117,6 +120,8 @@ const AllPhotos = () => {
             setPhotos(prev => [...prev, ...data.files.map(p => toPhoto(p, false))]);
             setLightboxPhotos(prev => [...prev, ...data.files.map(p => toPhoto(p, true))]);
             setHasMore(data.hasMore);
+            const counts = await getCommentCounts(data.files.map(f => f.id)).catch(() => ({}));
+            setCommentCounts(prev => ({ ...prev, ...counts }));
         } catch (err) {
             logger.error('fetchMore failed', err);
             toaster.push(<Message type="error" showIcon closable>Error cargando las fotos</Message>, { placement: 'topEnd' });
@@ -335,7 +340,6 @@ const AllPhotos = () => {
                             index={index}
                             onClose={() => { setIndex(-1); setSearchParams({}); stopSlideshow(); }}
                             onIndexChange={(i) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); }}
-                            onCommentAdded={(fileId) => setCommentCounts(prev => ({ ...prev, [fileId]: (prev[fileId] ?? 0) + 1 }))}
                             commentCounts={commentCounts}
                         />
                     )}

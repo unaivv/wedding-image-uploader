@@ -14,11 +14,10 @@ interface LightboxProps {
     index: number;
     onClose: () => void;
     onIndexChange: (i: number) => void;
-    onCommentAdded?: (fileId: string) => void;
     commentCounts?: Record<string, number>;
 }
 
-const Lightbox = ({ slides, index, onClose, onIndexChange, onCommentAdded, commentCounts = {} }: LightboxProps) => {
+const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {} }: LightboxProps) => {
     const toaster = useToaster();
     const [commentsOpen, setCommentsOpen] = useState(false);
     const [zoomed, setZoomed] = useState(false);
@@ -139,10 +138,7 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, onCommentAdded, comme
 
             {commentsOpen && (
                 <div className={styles.commentsSide}>
-                    <Comments
-                        fileId={photo.id}
-                        onNewComment={(fileId) => onCommentAdded?.(fileId)}
-                    />
+                    <Comments fileId={photo.id} />
                 </div>
             )}
         </div>
