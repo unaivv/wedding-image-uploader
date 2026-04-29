@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Button, Loader, Message, Modal, SelectPicker, useToaster } from 'rsuite';
+import { Button, Image, Loader, Message, Modal, useToaster } from 'rsuite';
 import {
     getChallenges, createChallenge, updateChallenge, deleteChallenge, setWinner,
-    type AdminChallenge,
+    type AdminChallenge, type AdminUser,
 } from '../service';
+import { Lightbox } from '../../Lightbox';
+import type { IPhoto } from '../../AllPhotos/types';
 import { logger } from '../../../utils/logger';
+import { cn } from '../../../utils/cn';
 import styles from './ChallengesManager.module.css';
 
 const EVENT_ID = import.meta.env.VITE_EVENT_ID as string;
@@ -17,6 +20,18 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('es-ES', {
 
 const EMPTY_FORM = { title: '', description: '', topic: '', endDate: '' };
 
+const participantToSlide = (p: AdminChallenge['participants'][number]): IPhoto => ({
+    src: (p.file as unknown as { compressedSrc: string }).compressedSrc,
+    fullSrc: (p.file as unknown as { fullSrc: string }).fullSrc,
+    width: 1500,
+    height: 1500,
+    id: (p.file as unknown as { _id: string })._id,
+    alt: p.user.name || p.user.email,
+    user: { _id: p.user._id, name: p.user.name, email: p.user.email, picture: p.user.picture ?? '' },
+    likedBy: [],
+    caption: p.user.name || p.user.email,
+});
+
 const ChallengesManager = () => {
     const toaster = useToaster();
     const [challenges, setChallenges] = useState<AdminChallenge[]>([]);
@@ -25,8 +40,10 @@ const ChallengesManager = () => {
     const [editing, setEditing] = useState<AdminChallenge | null>(null);
     const [form, setForm] = useState(EMPTY_FORM);
     const [saving, setSaving] = useState(false);
-    const [winnerModal, setWinnerModal] = useState<AdminChallenge | null>(null);
-    const [selectedWinner, setSelectedWinner] = useState<string | null>(null);
+    // Photos panel
+    const [photosChallenge, setPhotosChallenge] = useState<AdminChallenge | null>(null);
+    const [lightboxIndex, setLightboxIndex] = useState(-1);
+    const [pendingWinner, setPendingWinner] = useState<AdminUser | null>(null);
 
     const load = () => {
         setLoading(true);
@@ -84,15 +101,15 @@ const ChallengesManager = () => {
             });
     };
 
-    const handleSetWinner = () => {
-        if (!winnerModal || !selectedWinner) return;
+    const handleSetWinner = (challengeId: string, user: AdminUser) => {
+        if (!window.confirm(`¿Asignar a ${user.name || user.email} como ganador?`)) return;
         setSaving(true);
-        setWinner(winnerModal._id, selectedWinner)
+        setWinner(challengeId, user._id)
             .then(updated => {
                 setChallenges(prev => prev.map(c => c._id === updated._id ? updated : c));
-                setWinnerModal(null);
-                setSelectedWinner(null);
-                toaster.push(<Message type="success" showIcon closable>Ganador asignado</Message>, { placement: 'topEnd' });
+                setPhotosChallenge(updated);
+                setPendingWinner(null);
+                toaster.push(<Message type="success" showIcon closable>🥇 Ganador asignado</Message>, { placement: 'topEnd' });
             })
             .catch((err: unknown) => {
                 logger.error('set winner failed', err);
@@ -100,6 +117,8 @@ const ChallengesManager = () => {
             })
             .finally(() => setSaving(false));
     };
+
+    const slides = photosChallenge ? photosChallenge.participants.map(participantToSlide) : [];
 
     if (loading) return <Loader center content="Cargando retos..." />;
 
@@ -120,16 +139,16 @@ const ChallengesManager = () => {
                             <div className={styles.rowInfo}>
                                 <span className={styles.rowTitle}>{c.title}</span>
                                 {c.topic && <span className={styles.chip}>{c.topic}</span>}
-                                <span className={`${styles.chip} ${expired ? styles.chipExpired : styles.chipActive}`}>
+                                <span className={cn(styles.chip, expired ? styles.chipExpired : styles.chipActive)}>
                                     {expired ? 'Expirado' : 'Activo'}
                                 </span>
                                 <span className={styles.meta}>{formatDate(c.endDate)} · {c.participants.length} participantes</span>
                                 {c.winner && <span className={styles.winner}>🥇 {c.winner.name}</span>}
                             </div>
                             <div className={styles.rowActions}>
-                                {expired && !c.winner && c.participants.length > 0 && (
-                                    <Button size="xs" appearance="ghost" onClick={() => { setWinnerModal(c); setSelectedWinner(null); }}>
-                                        Ganador
+                                {c.participants.length > 0 && (
+                                    <Button size="xs" appearance="ghost" onClick={() => { setPhotosChallenge(c); setLightboxIndex(-1); setPendingWinner(null); }}>
+                                        Ver fotos
                                     </Button>
                                 )}
                                 <Button size="xs" appearance="subtle" onClick={() => openEdit(c)}>Editar</Button>
@@ -139,6 +158,67 @@ const ChallengesManager = () => {
                     );
                 })}
             </div>
+
+            {/* Photos panel modal */}
+            <Modal open={!!photosChallenge} onClose={() => setPhotosChallenge(null)} size="lg">
+                <Modal.Header>
+                    <Modal.Title>{photosChallenge?.title} — Participantes</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {photosChallenge && (
+                        <div className={styles.participantsGrid}>
+                            {photosChallenge.participants.map((p, i) => {
+                                const file = p.file as unknown as { _id: string; compressedSrc: string };
+                                const isWinner = photosChallenge.winner?._id === p.user._id;
+                                return (
+                                    <div
+                                        key={p.user._id}
+                                        className={cn(styles.participantCard, isWinner && styles.participantWinner)}
+                                    >
+                                        <button
+                                            type="button"
+                                            className={styles.participantThumb}
+                                            onClick={() => setLightboxIndex(i)}
+                                        >
+                                            <img src={file.compressedSrc} alt={p.user.name} loading="lazy" />
+                                            <span className={styles.thumbOverlay}>🔍</span>
+                                        </button>
+                                        <div className={styles.participantInfo}>
+                                            <Image src={p.user.picture} alt={p.user.name} circle style={{ width: 24, height: 24, flexShrink: 0 }} />
+                                            <span className={styles.participantName}>{p.user.name || p.user.email}</span>
+                                            {isWinner && <span className={styles.winnerTag}>🥇</span>}
+                                        </div>
+                                        {!photosChallenge.winner && isExpired(photosChallenge.endDate) && (
+                                            <Button
+                                                size="xs"
+                                                appearance="ghost"
+                                                loading={saving && pendingWinner?._id === p.user._id}
+                                                onClick={() => { setPendingWinner(p.user); handleSetWinner(photosChallenge._id, p.user); }}
+                                                block
+                                            >
+                                                Asignar ganador
+                                            </Button>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button appearance="subtle" onClick={() => setPhotosChallenge(null)}>Cerrar</Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Lightbox dentro del modal de fotos */}
+            {lightboxIndex >= 0 && slides.length > 0 && (
+                <Lightbox
+                    slides={slides}
+                    index={lightboxIndex}
+                    onClose={() => setLightboxIndex(-1)}
+                    onIndexChange={setLightboxIndex}
+                />
+            )}
 
             {/* Create / Edit modal */}
             <Modal open={modalOpen} onClose={() => setModalOpen(false)} size="sm">
@@ -168,27 +248,6 @@ const ChallengesManager = () => {
                 <Modal.Footer>
                     <Button appearance="primary" type="submit" form="challenge-form" loading={saving}>Guardar</Button>
                     <Button appearance="subtle" onClick={() => setModalOpen(false)}>Cancelar</Button>
-                </Modal.Footer>
-            </Modal>
-
-            {/* Winner modal */}
-            <Modal open={!!winnerModal} onClose={() => setWinnerModal(null)} size="xs">
-                <Modal.Header><Modal.Title>Asignar ganador</Modal.Title></Modal.Header>
-                <Modal.Body>
-                    <SelectPicker
-                        data={(winnerModal?.participants ?? []).map(p => ({
-                            label: p.user.name || p.user.email,
-                            value: p.user._id,
-                        }))}
-                        value={selectedWinner}
-                        onChange={setSelectedWinner}
-                        placeholder="Selecciona un participante"
-                        block
-                    />
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button appearance="primary" onClick={handleSetWinner} loading={saving} disabled={!selectedWinner}>Asignar</Button>
-                    <Button appearance="subtle" onClick={() => setWinnerModal(null)}>Cancelar</Button>
                 </Modal.Footer>
             </Modal>
         </div>

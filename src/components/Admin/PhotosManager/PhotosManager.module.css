@@ -22,6 +22,11 @@
     flex-wrap: wrap;
 }
 
+.hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
 .empty {
     color: var(--text-secondary);
     font-size: 0.9rem;

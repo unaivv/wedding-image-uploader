@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Loader, Message, SelectPicker, useToaster } from 'rsuite';
 import { getAdminPhotos, bulkDeletePhotos, type AdminPhoto, type AdminUser } from '../service';
+import { Lightbox } from '../../Lightbox';
 import { logger } from '../../../utils/logger';
 import { cn } from '../../../utils/cn';
+import type { IPhoto } from '../../AllPhotos/types';
 import styles from './PhotosManager.module.css';
 
 const PhotosManager = () => {
@@ -14,6 +16,7 @@ const PhotosManager = () => {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [deleting, setDeleting] = useState(false);
     const [filterUser, setFilterUser] = useState<string | null>(null);
+    const [lightboxIndex, setLightboxIndex] = useState(-1);
     const pageRef = useRef(1);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -46,6 +49,19 @@ const PhotosManager = () => {
         observer.observe(sentinelRef.current);
         return () => observer.disconnect();
     }, [hasMore, loading, loadingMore, filterUser, load]);
+
+    const toSlides = (list: AdminPhoto[]): IPhoto[] => list.map(p => ({
+        src: p.compressedSrc,
+        fullSrc: p.fullSrc,
+        width: 1500,
+        height: 1500,
+        id: p._id,
+        alt: p.userId?.name ?? '',
+        user: { _id: p.userId?._id ?? '', name: p.userId?.name ?? '', email: p.userId?.email ?? '', picture: p.userId?.picture ?? '' },
+        likedBy: [],
+        caption: p.caption,
+        isVideo: p.isVideo,
+    }));
 
     const toggleSelect = (id: string) => {
         setSelectedIds(prev => {
@@ -94,11 +110,12 @@ const PhotosManager = () => {
                         size="sm"
                         style={{ width: 180 }}
                     />
-                    {selectedIds.size > 0 && (
-                        <Button size="sm" color="red" appearance="ghost" onClick={handleBulkDelete} loading={deleting}>
+                    {selectedIds.size > 0
+                        ? <Button size="sm" color="red" appearance="ghost" onClick={handleBulkDelete} loading={deleting}>
                             Eliminar ({selectedIds.size})
-                        </Button>
-                    )}
+                          </Button>
+                        : <span className={styles.hint}>Click para ver · mantén para seleccionar</span>
+                    }
                 </div>
             </div>
 
@@ -114,7 +131,8 @@ const PhotosManager = () => {
                         key={photo._id}
                         type="button"
                         className={cn(styles.thumb, selectedIds.has(photo._id) && styles.selected)}
-                        onClick={() => toggleSelect(photo._id)}
+                        onClick={() => selectedIds.size > 0 ? toggleSelect(photo._id) : setLightboxIndex(photos.indexOf(photo))}
+                        onContextMenu={e => { e.preventDefault(); toggleSelect(photo._id); }}
                     >
                         <img src={photo.compressedSrc} alt="" loading="lazy" />
                         {selectedIds.has(photo._id) && <span className={styles.check}>✓</span>}
@@ -126,6 +144,15 @@ const PhotosManager = () => {
 
             <div ref={sentinelRef} style={{ height: 1 }} />
             {loadingMore && <Loader style={{ margin: '1em auto', display: 'block' }} />}
+
+            {lightboxIndex >= 0 && (
+                <Lightbox
+                    slides={toSlides(photos)}
+                    index={lightboxIndex}
+                    onClose={() => setLightboxIndex(-1)}
+                    onIndexChange={setLightboxIndex}
+                />
+            )}
         </div>
     );
 };
