@@ -134,6 +134,13 @@ const AllPhotos = () => {
             if (seeAllFotos === 'false' && photo.userId._id !== auth.getUserId()) return;
             setPhotos(prev => [toPhoto(photo, false), ...prev]);
             setLightboxPhotos(prev => [toPhoto(photo, true), ...prev]);
+            const authorName = photo.userId?.name || photo.userId?.email?.split('@')[0] || 'Alguien';
+            toaster.push(
+                <Message type="info" showIcon closable header={`${authorName} subió una foto`}>
+                    <img src={photo.compressedSrc} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 4, marginTop: 4 }} />
+                </Message>,
+                { placement: 'bottomEnd', duration: 4000 }
+            );
         },
         'new-comment': (data) => {
             const { fileId } = data as { fileId: string; comment: IComment };

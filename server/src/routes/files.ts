@@ -176,7 +176,9 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
                 }
 
                 dbId = savedFile.id;
-                emitToEvent(eventId, 'new-photo', { id: savedFile.id, fullSrc: cloudinaryFullUrl, compressedSrc: cloudinaryCompressedUrl, eventId, userId });
+                if (!challengeId) {
+                    emitToEvent(eventId, 'new-photo', { id: savedFile.id, fullSrc: cloudinaryFullUrl, compressedSrc: cloudinaryCompressedUrl, eventId, userId });
+                }
             } catch (err) {
                 logger.error("DB save failed during upload", err);
                 sendError(res, 500, "Failed to save file metadata");
