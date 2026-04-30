@@ -8,9 +8,10 @@ import CloseIcon from '@rsuite/icons/Close';
 
 interface CommentsProps {
     fileId: string;
+    onCommentDeleted?: (fileId: string) => void;
 }
 
-const Comments = ({ fileId }: CommentsProps) => {
+const Comments = ({ fileId, onCommentDeleted }: CommentsProps) => {
     const toaster = useToaster();
     const [comments, setComments] = useState<IComment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -50,7 +51,10 @@ const Comments = ({ fileId }: CommentsProps) => {
 
     const handleDelete = (commentId: string) => {
         deleteComment(commentId)
-            .then(() => setComments(prev => prev.filter(c => c._id !== commentId)))
+            .then(() => {
+                setComments(prev => prev.filter(c => c._id !== commentId));
+                onCommentDeleted?.(fileId);
+            })
             .catch((err: unknown) => {
                 logger.error('delete comment failed', err);
                 toaster.push(<Message type="error" showIcon closable>No se pudo eliminar el comentario</Message>, { placement: 'topEnd' });

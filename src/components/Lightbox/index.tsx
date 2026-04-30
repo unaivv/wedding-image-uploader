@@ -16,9 +16,10 @@ interface LightboxProps {
     onClose: () => void;
     onIndexChange: (i: number) => void;
     commentCounts?: Record<string, number>;
+    onCommentDeleted?: (fileId: string) => void;
 }
 
-const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {} }: LightboxProps) => {
+const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, onCommentDeleted }: LightboxProps) => {
     const toaster = useToaster();
     const [commentsOpen, setCommentsOpen] = useState(false);
     const [zoomed, setZoomed] = useState(false);
@@ -150,7 +151,7 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {} }:
 
             {commentsOpen && (
                 <div className={styles.commentsSide}>
-                    <Comments fileId={photo.id} />
+                    <Comments fileId={photo.id} onCommentDeleted={onCommentDeleted} />
                 </div>
             )}
         </div>,

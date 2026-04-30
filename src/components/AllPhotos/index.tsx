@@ -345,6 +345,7 @@ const AllPhotos = () => {
                             onClose={() => { setIndex(-1); setSearchParams({}); stopSlideshow(); }}
                             onIndexChange={(i) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); }}
                             commentCounts={commentCounts}
+                            onCommentDeleted={(fileId) => setCommentCounts(prev => ({ ...prev, [fileId]: Math.max((prev[fileId] ?? 0) - 1, 0) }))}
                         />
                     )}
                 </>
