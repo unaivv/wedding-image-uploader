@@ -7,7 +7,7 @@ import multer from "multer";
 import path from "path";
 import sharp from "sharp";
 import FileModel, { IFile } from "../models/file";
-import { deleteFileFromCloudinary, uploadFileToCloudinary } from "../services/useCloudinary";
+import { deleteFileFromCloudinary, extractPublicId, uploadFileToCloudinary } from "../services/useCloudinary";
 import { compressImage, convertToWebp } from "../services/images";
 import ChallengeModel, { IChallenge } from "../models/challenge";
 import UserModel from "../models/user";
@@ -208,16 +208,19 @@ router.delete("/:fileId", authenticateUser, async (req: Request, res: Response) 
         const file = await useDatabase<IFile | null>(() => FileModel.findById(fileId).exec());
         if (!file) { sendError(res, 404, "File not found"); return; }
 
-        const cloudinaryFullId = file.fullSrc.split('/').pop()?.split('.')[0];
-        const cloudinaryCompressedId = file.compressedSrc.split('/').pop()?.split('.')[0];
-        if (!cloudinaryCompressedId || !cloudinaryFullId) { sendError(res, 400, "Invalid file name format"); return; }
+        const resourceType = file.isVideo ? 'video' : 'image';
+        const fullPublicId = extractPublicId(file.fullSrc);
+        if (!fullPublicId) { sendError(res, 400, "Invalid file URL format"); return; }
 
-        const [deletedFull, deletedCompressed] = await Promise.all([
-            deleteFileFromCloudinary(cloudinaryFullId),
-            deleteFileFromCloudinary(cloudinaryCompressedId),
-        ]);
+        // For videos, compressedSrc is a derived URL — only the original asset needs deleting
+        const deletionTasks: Promise<boolean>[] = [deleteFileFromCloudinary(fullPublicId, resourceType)];
+        if (!file.isVideo) {
+            const compressedPublicId = extractPublicId(file.compressedSrc);
+            if (compressedPublicId) deletionTasks.push(deleteFileFromCloudinary(compressedPublicId, 'image'));
+        }
 
-        if (!deletedFull || !deletedCompressed) { sendError(res, 500, "Failed to delete file from Cloudinary"); return; }
+        const results = await Promise.all(deletionTasks);
+        if (results.some(r => !r)) { sendError(res, 500, "Failed to delete file from Cloudinary"); return; }
 
         await useDatabase(() => FileModel.deleteOne({ _id: fileId }).exec());
 

@@ -7,7 +7,7 @@ import FileModel from '../models/file';
 import CommentModel from '../models/comment';
 import ChallengeModel from '../models/challenge';
 import EventModel from '../models/event';
-import { deleteFileFromCloudinary } from '../services/useCloudinary';
+import { deleteFileFromCloudinary, extractPublicId } from '../services/useCloudinary';
 import { logger } from '../services/logger';
 
 const router = Router();
@@ -234,7 +234,12 @@ router.delete('/photos', authenticateAdmin, async (req: Request, res: Response):
     if (!ids?.length) { sendError(res, 400, 'Missing ids'); return; }
     try {
         const files = await useDatabase(async () => FileModel.find({ _id: { $in: ids } }).exec());
-        await Promise.all(files.map(f => deleteFileFromCloudinary(f.fullSrc).catch(() => null)));
+        await Promise.all(files.flatMap(f => {
+            const resourceType = f.isVideo ? 'video' : 'image';
+            const tasks = [deleteFileFromCloudinary(extractPublicId(f.fullSrc), resourceType).catch(() => null)];
+            if (!f.isVideo) tasks.push(deleteFileFromCloudinary(extractPublicId(f.compressedSrc), 'image').catch(() => null));
+            return tasks;
+        }));
         await useDatabase(async () => FileModel.deleteMany({ _id: { $in: ids } }).exec());
         res.json({ deleted: files.length });
     } catch (err) {

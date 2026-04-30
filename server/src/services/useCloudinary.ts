@@ -17,9 +17,15 @@ export const uploadFileToCloudinary = async (filePath: string, folder = ''): Pro
     return result.secure_url;
 }
 
-export const deleteFileFromCloudinary = async (publicId: string): Promise<boolean> => {
+/** Extracts the Cloudinary public_id (with folder) from a secure_url */
+export const extractPublicId = (url: string): string => {
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[^.]+)?$/);
+    return match?.[1] ?? '';
+};
+
+export const deleteFileFromCloudinary = async (publicId: string, resourceType: 'image' | 'video' = 'image'): Promise<boolean> => {
     try {
-        const result = await cloudinary.uploader.destroy(publicId);
+        const result = await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
         return result.result === 'ok';
     } catch (error) {
         console.error('Error deleting file from Cloudinary:', error);
