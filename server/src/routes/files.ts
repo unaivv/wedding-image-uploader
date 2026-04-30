@@ -209,30 +209,60 @@ router.delete("/:fileId", authenticateUser, async (req: Request, res: Response) 
         if (!file) { sendError(res, 404, "File not found"); return; }
 
         const resourceType = file.isVideo ? 'video' : 'image';
-        const fullPublicId = extractPublicId(file.fullSrc);
+        const fullPublicId = extractPublicID(file.fullSrc);
         if (!fullPublicId) { sendError(res, 400, "Invalid file URL format"); return; }
 
         // For videos, compressedSrc is a derived URL — only the original asset needs deleting
         const deletionTasks: Promise<boolean>[] = [deleteFileFromCloudinary(fullPublicId, resourceType)];
         if (!file.isVideo) {
-            const compressedPublicId = extractPublicId(file.compressedSrc);
+            const compressedPublicId = extractPublicID(file.compressedSrc);
             if (compressedPublicId) deletionTasks.push(deleteFileFromCloudinary(compressedPublicId, 'image'));
         }
 
-        const results = await Promise.all(deletionTasks);
-        if (results.some(r => !r)) { sendError(res, 500, "Failed to delete file from Cloudinary"); return; }
+        await Promise.all(deletionTasks);
+        await useDatabase(() => FileModel.findByIdAndDelete(fileId).exec());
 
-        await useDatabase(() => FileModel.deleteOne({ _id: fileId }).exec());
+        res.json({ success: true });
+    } catch (err) {
+        logger.error("delete file failed", err);
+        sendError(res, 500, "Failed to delete file");
+    }
+});
 
-        const challenge = await useDatabase(() => ChallengeModel.findOne({ "participants.file": fileId }).exec());
-        if (challenge) {
-            await useDatabase(() => ChallengeModel.updateOne({ _id: challenge._id }, { $pull: { participants: { file: fileId } } }).exec());
+router.post("/use-existing", authenticateUser, async (req: Request, res: Response) => {
+    const { fileId, challengeId } = req.body as { fileId?: string; challengeId?: string };
+    const userId = req.headers['userid'] as string;
+
+    if (!fileId || !challengeId) { sendError(res, 400, "Missing fileId or challengeId"); return; }
+
+    try {
+        // Verify file exists and belongs to user
+        const file = await useDatabase<IFile | null>(() => FileModel.findById(fileId).exec());
+        if (!file) { sendError(res, 404, "File not found"); return; }
+        if (file.userId.toString() !== userId) { sendError(res, 403, "Not authorized"); return; }
+
+        // Verify challenge exists
+        const challenge = await useDatabase(() => ChallengeModel.findById(challengeId).exec());
+        if (!challenge) { sendError(res, 404, "Challenge not found"); return; }
+
+        // Check if user already participating
+        if (challenge.participants.some((p: Participant) => p.user.toString() === userId)) {
+            sendError(res, 400, "User is already participating in this challenge"); return;
         }
 
-        res.json({ message: "File deleted successfully" });
+        // Add user to challenge with existing file
+        const updated = await useDatabase(() =>
+            ChallengeModel.updateOne(
+                { _id: challengeId },
+                { $push: { participants: { user: userId, file: fileId, uploadedAt: new Date() } } }
+            ).exec()
+        );
+        if (!updated) { sendError(res, 500, "Failed to update challenge"); return; }
+
+        res.json({ success: true, fileId });
     } catch (err) {
-        logger.error("delete failed", err);
-        sendError(res, 500, "Internal server error");
+        logger.error("use existing file failed", err);
+        sendError(res, 500, "Failed to use existing file");
     }
 });
 

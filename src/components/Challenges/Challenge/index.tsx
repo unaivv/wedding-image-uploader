@@ -12,7 +12,7 @@ import { Lightbox } from "../../Lightbox";
 import type { IPhoto } from "../../AllPhotos/types";
 import { getCommentCounts } from "../../Comments/service";
 import { logger } from "../../../utils/logger";
-import { getMyPhotos } from "../../AllPhotos/service";
+import { getMyPhotos, useExistingPhoto } from "../../AllPhotos/service";
 
 const Challenge = ({ challenge }: IChallengeProps) => {
     const toaster = useToaster();
@@ -76,15 +76,21 @@ const Challenge = ({ challenge }: IChallengeProps) => {
         }
     };
 
-    const handleSelectMyPhoto = (photo: { id: string; compressedSrc: string; fullSrc: string }) => {
-        setFile({
-            name: photo.id,
-            url: photo.compressedSrc,
-            fileKey: photo.id,
-            blobFile: undefined,
-        } as FileType);
-        setMyPhotosModalOpen(false);
-        toaster.push(<Message type="success" showIcon closable>Foto seleccionada</Message>, { placement: 'topEnd' });
+    const handleSelectMyPhoto = async (photo: { id: string; compressedSrc: string; fullSrc: string }) => {
+        try {
+            await useExistingPhoto(photo.id, challenge.id);
+            setFile({
+                name: photo.id,
+                url: photo.compressedSrc,
+                fileKey: photo.id,
+                blobFile: undefined,
+            } as FileType);
+            setMyPhotosModalOpen(false);
+            toaster.push(<Message type="success" showIcon closable>Foto seleccionada</Message>, { placement: 'topEnd' });
+        } catch (err) {
+            logger.error('use existing photo failed', err);
+            toaster.push(<Message type="error" showIcon closable>Error al seleccionar la foto</Message>, { placement: 'topEnd' });
+        }
     };
 
     const renderFile = () => {

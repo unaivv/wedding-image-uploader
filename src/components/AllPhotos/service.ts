@@ -96,3 +96,16 @@ export const downloadAllPhotos = async (eventId: string): Promise<void> => {
     anchor.click();
     URL.revokeObjectURL(objectUrl);
 };
+
+export const useExistingPhoto = async (fileId: string, challengeId: string): Promise<void> => {
+    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/files/use-existing`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            userId: auth.getUserId() || '',
+            'google-token': auth.getToken() || '',
+        },
+        body: JSON.stringify({ fileId, challengeId }),
+    });
+    if (!res.ok) throw new Error('Failed to use existing photo');
+};
