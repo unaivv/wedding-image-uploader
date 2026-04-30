@@ -65,8 +65,8 @@
     &.onlyButton {
         padding: 0 !important;
         height: auto;
-        border: none;
-        background: transparent;
+        border: none !important;
+        background: transparent !important;
 
         button {
             width: 100%;
