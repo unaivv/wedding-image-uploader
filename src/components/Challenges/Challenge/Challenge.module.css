@@ -111,8 +111,7 @@
     margin-top: 0.5rem;
 }
 
-.challengeUploadBtn button,
-.challengeUploadBtn :global(.rs-uploader-trigger-btn) {
+.challengeUploadBtn {
     padding: 0 !important;
 }
 
