@@ -8,11 +8,11 @@ import CloseIcon from '@rsuite/icons/Close';
 
 interface CommentsProps {
     fileId: string;
+    onCommentPosted?: (fileId: string) => void;
     onCommentDeleted?: (fileId: string) => void;
 }
 
-const Comments = ({ fileId, onCommentDeleted }: CommentsProps) => {
-    console.log('[Comments] rendering, fileId:', fileId);
+const Comments = ({ fileId, onCommentPosted, onCommentDeleted }: CommentsProps) => {
     const toaster = useToaster();
     const [comments, setComments] = useState<IComment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -24,12 +24,8 @@ const Comments = ({ fileId, onCommentDeleted }: CommentsProps) => {
         if (!fileId) return;
         setLoading(true);
         setComments([]);
-        console.log('[Comments] loading for fileId:', fileId);
         getComments(fileId)
-            .then((data) => {
-                console.log('[Comments] loaded:', data.length);
-                setComments(data);
-            })
+            .then(setComments)
             .catch((err: unknown) => { logger.error('load comments failed', err); })
             .finally(() => setLoading(false));
     }, [fileId]);
@@ -46,6 +42,7 @@ const Comments = ({ fileId, onCommentDeleted }: CommentsProps) => {
             .then(comment => {
                 setComments(prev => [...prev, comment]);
                 setText('');
+                onCommentPosted?.(fileId);
             })
             .catch((err: unknown) => {
                 logger.error('post comment failed', err);

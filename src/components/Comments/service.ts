@@ -22,7 +22,6 @@ const headers = () => ({
 });
 
 export const getComments = async (fileId: string): Promise<IComment[]> => {
-    console.log('[getComments] fetching:', fileId);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     
@@ -32,14 +31,11 @@ export const getComments = async (fileId: string): Promise<IComment[]> => {
             signal: controller.signal
         });
         clearTimeout(timeout);
-        console.log('[getComments] response status:', res.status);
         if (!res.ok) throw new Error('Failed to fetch comments');
         const data = await res.json() as { comments: IComment[] };
-        console.log('[getComments] comments count:', data.comments.length);
         return data.comments;
     } catch (err) {
         clearTimeout(timeout);
-        console.log('[getComments] error:', err);
         throw err;
     }
 };

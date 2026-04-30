@@ -16,10 +16,11 @@ interface LightboxProps {
     onClose: () => void;
     onIndexChange: (i: number) => void;
     commentCounts?: Record<string, number>;
+    onCommentPosted?: (fileId: string) => void;
     onCommentDeleted?: (fileId: string) => void;
 }
 
-const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, onCommentDeleted }: LightboxProps) => {
+const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, onCommentPosted, onCommentDeleted }: LightboxProps) => {
     const toaster = useToaster();
     const [commentsOpen, setCommentsOpen] = useState(false);
     const [zoomed, setZoomed] = useState(false);
@@ -27,7 +28,6 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, o
     const touchStartY = useRef(0);
 
     const photo = slides[index];
-    console.log('[Lightbox] rendering with photo.id:', photo?.id, 'slides.length:', slides.length, 'index:', index);
     const hasPrev = index > 0;
     const hasNext = index < slides.length - 1;
 
@@ -42,19 +42,11 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, o
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft' && index > 0) { setZoomed(false); onIndexChange(index - 1); }
             else if (e.key === 'ArrowRight' && index < slides.length - 1) { setZoomed(false); onIndexChange(index + 1); }
-            else if (e.key === 'Escape') {
-                console.log('[Lightbox] Escape pressed');
-                onClose();
-            }
+            else if (e.key === 'Escape') onClose();
         };
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
     }, [index, slides.length, onClose, onIndexChange]);
-
-    // Debug: log commentsOpen state
-    useEffect(() => {
-        console.log('[Lightbox] commentsOpen:', commentsOpen);
-    }, [commentsOpen]);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -106,10 +98,7 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, o
                     <div className={styles.toolbarActions}>
                         <button
                             type="button"
-                            onClick={() => {
-                                console.log('[Lightbox] comments button clicked, commentsOpen:', !commentsOpen);
-                                setCommentsOpen(o => !o);
-                            }}
+                            onClick={() => setCommentsOpen(o => !o)}
                             className={cn(styles.toolbarBtn, commentsOpen && styles.toolbarBtnActive)}
                             title="Comentarios"
                         >
@@ -166,6 +155,7 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, o
                     <Comments 
                         key={`${photo.id}-${index}`}
                         fileId={photo.id} 
+                        onCommentPosted={onCommentPosted}
                         onCommentDeleted={onCommentDeleted} 
                     />
                 </div>

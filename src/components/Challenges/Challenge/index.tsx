@@ -32,7 +32,6 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     // winnerPhoto needs to be defined before handleOpenWinnerLightbox
     const winnerParticipant = challenge?.winner ? challenge.participants.find(p => p.user._id === challenge.winner!._id) : null;
     const winnerFile = winnerParticipant?.file;
-    console.log('[Challenge] winnerFile:', winnerFile, 'winnerFile?.id:', winnerFile?.id, 'winnerFile?._id:', winnerFile?._id);
     const winnerPhoto: IPhoto | null = winnerFile
         ? {
               id: winnerFile.id || winnerFile._id || 'MISSING_ID',
@@ -120,6 +119,12 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                         onClose={() => setWinnerLightboxOpen(false)}
                         onIndexChange={() => {}}
                         commentCounts={commentCounts}
+                        onCommentPosted={(fileId) => {
+                            setCommentCounts(prev => ({
+                                ...prev,
+                                [fileId]: (prev[fileId] || 0) + 1,
+                            }));
+                        }}
                         onCommentDeleted={(fileId) => {
                             setCommentCounts(prev => ({
                                 ...prev,
