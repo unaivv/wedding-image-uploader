@@ -63,7 +63,7 @@
     }
 
     &.onlyButton {
-        padding: 0;
+        padding: 0 !important;
         height: auto;
         border: none;
         background: transparent;
