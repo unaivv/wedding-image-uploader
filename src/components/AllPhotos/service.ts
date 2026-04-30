@@ -10,6 +10,29 @@ export interface PhotosPage {
     hasMore: boolean;
 }
 
+export const getMyPhotos = async (eventId?: string, limit = 50): Promise<IPhotosFromBackend[]> => {
+    const userId = auth.getUserId();
+    if (!userId) return [];
+    
+    const data = await get<{ files: (IPhotosFromBackend & { _id?: string })[] }>({
+        url: `${import.meta.env.VITE_BACKEND_URL}/files/get-all`,
+        params: { eventId: eventId || '', page: '1', limit: String(limit), userId },
+        auth: true,
+    });
+
+    let photos = data.files.map((photo) => {
+        const { _id, ...rest } = photo;
+        return { ...rest, id: _id ?? rest.id } as IPhotosFromBackend;
+    });
+
+    // If eventId provided, filter by event
+    if (eventId) {
+        photos = photos.filter(p => p.eventId === eventId);
+    }
+
+    return photos;
+};
+
 export const getAllPhotos = async (eventId: string, page = 1, limit = 20, userId?: string): Promise<PhotosPage> => {
     const params: Record<string, string> = { eventId, page: String(page), limit: String(limit) };
     if (userId) params.userId = userId;
