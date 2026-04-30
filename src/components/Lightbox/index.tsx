@@ -41,11 +41,19 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, o
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft' && index > 0) { setZoomed(false); onIndexChange(index - 1); }
             else if (e.key === 'ArrowRight' && index < slides.length - 1) { setZoomed(false); onIndexChange(index + 1); }
-            else if (e.key === 'Escape') onClose();
+            else if (e.key === 'Escape') {
+                console.log('[Lightbox] Escape pressed');
+                onClose();
+            }
         };
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
     }, [index, slides.length, onClose, onIndexChange]);
+
+    // Debug: log commentsOpen state
+    useEffect(() => {
+        console.log('[Lightbox] commentsOpen:', commentsOpen);
+    }, [commentsOpen]);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -97,7 +105,10 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, o
                     <div className={styles.toolbarActions}>
                         <button
                             type="button"
-                            onClick={() => setCommentsOpen(o => !o)}
+                            onClick={() => {
+                                console.log('[Lightbox] comments button clicked, commentsOpen:', !commentsOpen);
+                                setCommentsOpen(o => !o);
+                            }}
                             className={cn(styles.toolbarBtn, commentsOpen && styles.toolbarBtnActive)}
                             title="Comentarios"
                         >
