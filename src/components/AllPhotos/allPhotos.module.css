@@ -44,10 +44,16 @@
     border-radius: var(--radius-sm);
     border: 1px solid var(--border);
     background: var(--bg-input);
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-family: var(--font-body);
     font-size: 0.75rem;
     cursor: pointer;
+    color-scheme: light dark;
+
+    option {
+        background: var(--bg-input);
+        color: var(--text-primary);
+    }
 
     &:focus {
         outline: none;
