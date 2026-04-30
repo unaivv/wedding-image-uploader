@@ -62,13 +62,14 @@ body[data-theme='light'] {
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
   width: 100%;
   max-width: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
