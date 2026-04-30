@@ -162,7 +162,11 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, o
 
             {commentsOpen && (
                 <div className={styles.commentsSide}>
-                    <Comments fileId={photo.id} onCommentDeleted={onCommentDeleted} />
+                    <Comments 
+                        key={photo.id}
+                        fileId={photo.id} 
+                        onCommentDeleted={onCommentDeleted} 
+                    />
                 </div>
             )}
         </div>,
