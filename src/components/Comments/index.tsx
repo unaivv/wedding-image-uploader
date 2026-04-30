@@ -23,8 +23,12 @@ const Comments = ({ fileId, onCommentDeleted }: CommentsProps) => {
         if (!fileId) return;
         setLoading(true);
         setComments([]);
+        console.log('[Comments] loading for fileId:', fileId);
         getComments(fileId)
-            .then(setComments)
+            .then((data) => {
+                console.log('[Comments] loaded:', data.length);
+                setComments(data);
+            })
             .catch((err: unknown) => { logger.error('load comments failed', err); })
             .finally(() => setLoading(false));
     }, [fileId]);
