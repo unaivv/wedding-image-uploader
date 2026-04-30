@@ -255,11 +255,17 @@ const AllPhotos = () => {
                     <Button size="sm" appearance="subtle" onClick={handleDownloadAll} loading={downloading} startIcon={<FileDownloadIcon />}>
                         Descargar todas
                     </Button>
-                    {sortedPhotos.length > 0 && (
+                    {(!loading || switchingFilter || sortedPhotos.length > 0 || slideshowActive) && (
                         slideshowActive
                             ? <Button size="sm" appearance="subtle" onClick={stopSlideshow} startIcon={<PauseOutlineIcon />}>Pausar</Button>
                             : <div className={styles.slideshowGroup}>
-                                <Button size="sm" appearance="subtle" onClick={() => startSlideshow(sortedPhotos)} startIcon={<PlayOutlineIcon />}>Presentación</Button>
+                                <Button 
+                                    size="sm" 
+                                    appearance="subtle" 
+                                    onClick={() => startSlideshow(sortedPhotos)} 
+                                    startIcon={<PlayOutlineIcon />}
+                                    disabled={loading || switchingFilter}
+                                >Presentación</Button>
                                 <SelectPicker
                                     data={[
                                         { label: 'Lenta', value: 'slow' },
