@@ -209,13 +209,13 @@ router.delete("/:fileId", authenticateUser, async (req: Request, res: Response) 
         if (!file) { sendError(res, 404, "File not found"); return; }
 
         const resourceType = file.isVideo ? 'video' : 'image';
-        const fullPublicId = extractPublicID(file.fullSrc);
+        const fullPublicId = extractPublicId(file.fullSrc);
         if (!fullPublicId) { sendError(res, 400, "Invalid file URL format"); return; }
 
         // For videos, compressedSrc is a derived URL — only the original asset needs deleting
         const deletionTasks: Promise<boolean>[] = [deleteFileFromCloudinary(fullPublicId, resourceType)];
         if (!file.isVideo) {
-            const compressedPublicId = extractPublicID(file.compressedSrc);
+            const compressedPublicId = extractPublicId(file.compressedSrc);
             if (compressedPublicId) deletionTasks.push(deleteFileFromCloudinary(compressedPublicId, 'image'));
         }
 
