@@ -17,10 +17,15 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getStats()
-            .then(setStats)
-            .catch((err: unknown) => logger.error('dashboard stats failed', err))
-            .finally(() => setLoading(false));
+        const fetch = () =>
+            getStats()
+                .then(setStats)
+                .catch((err: unknown) => logger.error('dashboard stats failed', err))
+                .finally(() => setLoading(false));
+
+        fetch();
+        const interval = setInterval(fetch, 30_000);
+        return () => clearInterval(interval);
     }, []);
 
     if (loading) return <Loader center content="Cargando estadísticas..." />;

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Loader, Message, SelectPicker, useToaster } from 'rsuite';
 import { getAdminPhotos, bulkDeletePhotos, type AdminPhoto, type AdminUser } from '../service';
 import { Lightbox } from '../../Lightbox';
+import { ConfirmModal } from '../../ConfirmModal';
 import { logger } from '../../../utils/logger';
 import { cn } from '../../../utils/cn';
 import type { IPhoto } from '../../AllPhotos/types';
@@ -17,6 +18,7 @@ const PhotosManager = () => {
     const [deleting, setDeleting] = useState(false);
     const [filterUser, setFilterUser] = useState<string | null>(null);
     const [lightboxIndex, setLightboxIndex] = useState(-1);
+    const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
     const pageRef = useRef(1);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -72,34 +74,44 @@ const PhotosManager = () => {
     };
 
     const handleBulkDelete = () => {
-        if (!window.confirm(`¿Eliminar ${selectedIds.size} fotos? Esta acción no se puede deshacer.`)) return;
-        setDeleting(true);
-        bulkDeletePhotos([...selectedIds])
-            .then(() => {
-                setPhotos(prev => prev.filter(p => !selectedIds.has(p._id)));
-                setSelectedIds(new Set());
-                toaster.push(<Message type="success" showIcon closable>Fotos eliminadas</Message>, { placement: 'topEnd' });
-            })
-            .catch((err: unknown) => {
-                logger.error('bulk delete failed', err);
-                toaster.push(<Message type="error" showIcon closable>Error al eliminar</Message>, { placement: 'topEnd' });
-            })
-            .finally(() => setDeleting(false));
+        setConfirm({
+            message: `¿Eliminar ${selectedIds.size} foto${selectedIds.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`,
+            onConfirm: () => {
+                setDeleting(true);
+                setConfirm(null);
+                bulkDeletePhotos([...selectedIds])
+                    .then(() => {
+                        setPhotos(prev => prev.filter(p => !selectedIds.has(p._id)));
+                        setSelectedIds(new Set());
+                        toaster.push(<Message type="success" showIcon closable>Fotos eliminadas</Message>, { placement: 'topEnd' });
+                    })
+                    .catch((err: unknown) => {
+                        logger.error('bulk delete failed', err);
+                        toaster.push(<Message type="error" showIcon closable>Error al eliminar</Message>, { placement: 'topEnd' });
+                    })
+                    .finally(() => setDeleting(false));
+            },
+        });
     };
 
     const handleDeleteOne = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        if (!window.confirm('¿Eliminar esta foto? Esta acción no se puede deshacer.')) return;
-        bulkDeletePhotos([id])
-            .then(() => {
-                setPhotos(prev => prev.filter(p => p._id !== id));
-                setSelectedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
-                toaster.push(<Message type="success" showIcon closable>Foto eliminada</Message>, { placement: 'topEnd' });
-            })
-            .catch((err: unknown) => {
-                logger.error('delete one failed', err);
-                toaster.push(<Message type="error" showIcon closable>Error al eliminar</Message>, { placement: 'topEnd' });
-            });
+        setConfirm({
+            message: '¿Eliminar esta foto? Esta acción no se puede deshacer.',
+            onConfirm: () => {
+                setConfirm(null);
+                bulkDeletePhotos([id])
+                    .then(() => {
+                        setPhotos(prev => prev.filter(p => p._id !== id));
+                        setSelectedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+                        toaster.push(<Message type="success" showIcon closable>Foto eliminada</Message>, { placement: 'topEnd' });
+                    })
+                    .catch((err: unknown) => {
+                        logger.error('delete one failed', err);
+                        toaster.push(<Message type="error" showIcon closable>Error al eliminar</Message>, { placement: 'topEnd' });
+                    });
+            },
+        });
     };
 
     const uniqueUsers: AdminUser[] = [];
@@ -174,6 +186,16 @@ const PhotosManager = () => {
                     onIndexChange={setLightboxIndex}
                 />
             )}
+
+            <ConfirmModal
+                open={confirm !== null}
+                message={confirm?.message ?? ''}
+                confirmLabel="Eliminar"
+                danger
+                loading={deleting}
+                onConfirm={() => confirm?.onConfirm()}
+                onCancel={() => setConfirm(null)}
+            />
         </div>
     );
 };

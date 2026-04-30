@@ -5,6 +5,7 @@ import {
     type AdminChallenge, type AdminUser,
 } from '../service';
 import { Lightbox } from '../../Lightbox';
+import { ConfirmModal } from '../../ConfirmModal';
 import type { IPhoto } from '../../AllPhotos/types';
 import { logger } from '../../../utils/logger';
 import { cn } from '../../../utils/cn';
@@ -44,6 +45,7 @@ const ChallengesManager = () => {
     const [photosChallenge, setPhotosChallenge] = useState<AdminChallenge | null>(null);
     const [lightboxIndex, setLightboxIndex] = useState(-1);
     const [pendingWinner, setPendingWinner] = useState<AdminUser | null>(null);
+    const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
     const load = () => {
         setLoading(true);
@@ -92,30 +94,40 @@ const ChallengesManager = () => {
     };
 
     const handleDelete = (id: string) => {
-        if (!window.confirm('¿Eliminar este reto?')) return;
-        deleteChallenge(id)
-            .then(() => setChallenges(prev => prev.filter(c => c._id !== id)))
-            .catch((err: unknown) => {
-                logger.error('delete challenge failed', err);
-                toaster.push(<Message type="error" showIcon closable>Error al eliminar</Message>, { placement: 'topEnd' });
-            });
+        setConfirm({
+            message: '¿Eliminar este reto? Esta acción no se puede deshacer.',
+            onConfirm: () => {
+                setConfirm(null);
+                deleteChallenge(id)
+                    .then(() => setChallenges(prev => prev.filter(c => c._id !== id)))
+                    .catch((err: unknown) => {
+                        logger.error('delete challenge failed', err);
+                        toaster.push(<Message type="error" showIcon closable>Error al eliminar</Message>, { placement: 'topEnd' });
+                    });
+            },
+        });
     };
 
     const handleSetWinner = (challengeId: string, user: AdminUser) => {
-        if (!window.confirm(`¿Asignar a ${user.name || user.email} como ganador?`)) return;
-        setSaving(true);
-        setWinner(challengeId, user._id)
-            .then(updated => {
-                setChallenges(prev => prev.map(c => c._id === updated._id ? updated : c));
-                setPhotosChallenge(updated);
-                setPendingWinner(null);
-                toaster.push(<Message type="success" showIcon closable>🥇 Ganador asignado</Message>, { placement: 'topEnd' });
-            })
-            .catch((err: unknown) => {
-                logger.error('set winner failed', err);
-                toaster.push(<Message type="error" showIcon closable>Error al asignar ganador</Message>, { placement: 'topEnd' });
-            })
-            .finally(() => setSaving(false));
+        setConfirm({
+            message: `¿Asignar a ${user.name || user.email} como ganador? Esta acción no se puede deshacer.`,
+            onConfirm: () => {
+                setConfirm(null);
+                setSaving(true);
+                setWinner(challengeId, user._id)
+                    .then(updated => {
+                        setChallenges(prev => prev.map(c => c._id === updated._id ? updated : c));
+                        setPhotosChallenge(updated);
+                        setPendingWinner(null);
+                        toaster.push(<Message type="success" showIcon closable>🥇 Ganador asignado</Message>, { placement: 'topEnd' });
+                    })
+                    .catch((err: unknown) => {
+                        logger.error('set winner failed', err);
+                        toaster.push(<Message type="error" showIcon closable>Error al asignar ganador</Message>, { placement: 'topEnd' });
+                    })
+                    .finally(() => setSaving(false));
+            },
+        });
     };
 
     const slides = photosChallenge ? photosChallenge.participants.map(participantToSlide) : [];
@@ -250,6 +262,15 @@ const ChallengesManager = () => {
                     <Button appearance="subtle" onClick={() => setModalOpen(false)}>Cancelar</Button>
                 </Modal.Footer>
             </Modal>
+
+            <ConfirmModal
+                open={confirm !== null}
+                message={confirm?.message ?? ''}
+                confirmLabel="Confirmar"
+                danger
+                onConfirm={() => confirm?.onConfirm()}
+                onCancel={() => setConfirm(null)}
+            />
         </div>
     );
 };
