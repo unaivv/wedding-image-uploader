@@ -67,6 +67,7 @@ const AllPhotos = () => {
 
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [switchingFilter, setSwitchingFilter] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [error, setError] = useState(false);
     const pageRef = useRef(1);
@@ -97,7 +98,10 @@ const AllPhotos = () => {
                 setError(true);
                 toaster.push(<Message type="error" showIcon closable>Error cargando las fotos</Message>, { placement: 'topEnd' });
             })
-            .finally(() => setLoading(false));
+            .finally(() => {
+                setLoading(false);
+                setSwitchingFilter(false);
+            });
     }, [seeAllFotos, refreshKey, toaster]);
 
     useEffect(() => {
@@ -284,7 +288,17 @@ const AllPhotos = () => {
                     </div>
                     <div className={styles.toggleGroup}>
                         <span>Fotos</span>
-                        <Toggle size="md" checkedChildren="Todas" unCheckedChildren="Mías" checked={seeAllFotos === 'true'} onChange={(v: boolean) => setAllPhotos(v ? 'true' : 'false')} />
+                        <Toggle 
+                            size="md" 
+                            checkedChildren="Todas" 
+                            unCheckedChildren="Mías" 
+                            checked={seeAllFotos === 'true'} 
+                            disabled={switchingFilter}
+                            onChange={(v: boolean) => {
+                                setSwitchingFilter(true);
+                                setAllPhotos(v ? 'true' : 'false');
+                            }} 
+                        />
                     </div>
                 </div>
             </div>
