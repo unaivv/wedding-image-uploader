@@ -27,6 +27,7 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, o
     const touchStartY = useRef(0);
 
     const photo = slides[index];
+    console.log('[Lightbox] rendering with photo.id:', photo?.id, 'slides.length:', slides.length, 'index:', index);
     const hasPrev = index > 0;
     const hasNext = index < slides.length - 1;
 
@@ -163,7 +164,7 @@ const Lightbox = ({ slides, index, onClose, onIndexChange, commentCounts = {}, o
             {commentsOpen && (
                 <div className={styles.commentsSide}>
                     <Comments 
-                        key={photo.id}
+                        key={`${photo.id}-${index}`}
                         fileId={photo.id} 
                         onCommentDeleted={onCommentDeleted} 
                     />
