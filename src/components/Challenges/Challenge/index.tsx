@@ -10,11 +10,14 @@ import { auth } from "../../../utils/auth";
 import { deleteParticipation } from "./service";
 import { Lightbox } from "../../Lightbox";
 import type { IPhoto } from "../../AllPhotos/types";
+import { getCommentCounts } from "../../Comments/service";
+import { logger } from "../../../utils/logger";
 
 const Challenge = ({ challenge }: IChallengeProps) => {
     const toaster = useToaster();
     const [now, setNow] = useState(new Date());
     const [winnerLightboxOpen, setWinnerLightboxOpen] = useState(false);
+    const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
     const [file, setFile] = useState<FileType | null>(() => {
         const backendFile = challenge.participants.find(p => p.user._id === auth.getUserId())?.file || null;
         if (!backendFile) return null;
@@ -26,10 +29,34 @@ const Challenge = ({ challenge }: IChallengeProps) => {
         } as FileType;
     });
 
+    // winnerPhoto needs to be defined before handleOpenWinnerLightbox
+    const winnerParticipant = challenge?.winner ? challenge.participants.find(p => p.user._id === challenge.winner!._id) : null;
+    const winnerFile = winnerParticipant?.file;
+    const winnerPhoto: IPhoto | null = winnerFile
+        ? {
+              id: winnerFile.id,
+              src: winnerFile.compressedSrc,
+              fullSrc: winnerFile.fullSrc ?? winnerFile.compressedSrc,
+              alt: winnerFile.id,
+              width: 0,
+              height: 0,
+              user: challenge.winner!,
+              likedBy: [],
+          }
+        : null;
+
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(interval);
     }, []);
+
+    const handleOpenWinnerLightbox = () => {
+        if (!winnerPhoto) return;
+        setWinnerLightboxOpen(true);
+        getCommentCounts([winnerPhoto.id])
+            .then(setCommentCounts)
+            .catch((err: unknown) => logger.error('load comment counts failed', err));
+    };
 
     const renderFile = () => {
         if (file === null) {
@@ -73,21 +100,6 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     };
 
     if (challenge?.winner) {
-        const winnerParticipant = challenge.participants.find(p => p.user._id === challenge.winner!._id);
-        const winnerFile = winnerParticipant?.file;
-        const winnerPhoto: IPhoto | null = winnerFile
-            ? {
-                  id: winnerFile.id,
-                  src: winnerFile.compressedSrc,
-                  fullSrc: winnerFile.fullSrc ?? winnerFile.compressedSrc,
-                  alt: winnerFile.id,
-                  width: 0,
-                  height: 0,
-                  user: challenge.winner,
-                  likedBy: [],
-              }
-            : null;
-
         return (
             <div className={styles.challengeCard}>
                 <div>
@@ -96,7 +108,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                     <div className={styles.winnerBadge}>🥇 {challenge.winner.name}</div>
                 </div>
                 {winnerPhoto && (
-                    <div className={styles.uploadUniqueImage} onClick={() => setWinnerLightboxOpen(true)}>
+                    <div className={styles.uploadUniqueImage} onClick={handleOpenWinnerLightbox}>
                         <Image src={winnerPhoto.src} alt={winnerPhoto.alt} style={{ width: '100%', height: 'auto' }} />
                     </div>
                 )}
@@ -106,6 +118,13 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                         index={0}
                         onClose={() => setWinnerLightboxOpen(false)}
                         onIndexChange={() => {}}
+                        commentCounts={commentCounts}
+                        onCommentDeleted={(fileId) => {
+                            setCommentCounts(prev => ({
+                                ...prev,
+                                [fileId]: Math.max(0, (prev[fileId] || 1) - 1),
+                            }));
+                        }}
                     />
                 )}
             </div>
