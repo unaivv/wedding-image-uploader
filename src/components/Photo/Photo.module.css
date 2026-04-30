@@ -34,7 +34,7 @@
     position: absolute;
     top: 5px;
     left: 5px;
-    background: rgba(20, 20, 20, 0.7);
+    background: var(--accent);
     border: none;
     border-radius: 50%;
     width: 28px;
@@ -50,7 +50,7 @@
     opacity: 0;
 
     &:hover {
-        background: rgba(20, 20, 20, 0.92);
+        background: var(--accent-hover);
         transform: scale(1.1);
     }
 }
@@ -63,7 +63,7 @@ div:hover > .downloadButton {
     position: absolute;
     top: 5px;
     left: 38px;
-    background: rgba(20, 20, 20, 0.7);
+    background: var(--accent);
     border: none;
     border-radius: 50%;
     width: 28px;
@@ -81,7 +81,7 @@ div:hover > .downloadButton {
     backdrop-filter: blur(4px);
 
     &:hover {
-        background: var(--accent);
+        background: var(--accent-hover);
         transform: scale(1.1);
     }
 }
@@ -99,7 +99,7 @@ div:hover > .selectButton {
     position: absolute;
     top: 5px;
     right: 5px;
-    background: rgba(20, 20, 20, 0.7);
+    background: var(--accent);
     border: none;
     border-radius: 50%;
     width: 28px;
@@ -115,7 +115,7 @@ div:hover > .selectButton {
     opacity: 0;
 
     &:hover {
-        background: rgba(20, 20, 20, 0.92);
+        background: var(--accent-hover);
         transform: scale(1.1);
     }
 }
