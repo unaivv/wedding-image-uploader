@@ -10,6 +10,7 @@ import FileModel, { IFile } from "../models/file";
 import { deleteFileFromCloudinary, uploadFileToCloudinary } from "../services/useCloudinary";
 import { compressImage, convertToWebp } from "../services/images";
 import ChallengeModel, { IChallenge } from "../models/challenge";
+import UserModel from "../models/user";
 import { authenticateUser } from "../services/auth";
 import { logger } from "../services/logger";
 import { emitToEvent } from "../services/sseEmitter";
@@ -177,7 +178,14 @@ router.post("/upload", authenticateUser, upload.fields([{ name: 'file', maxCount
 
                 dbId = savedFile.id;
                 if (!challengeId) {
-                    emitToEvent(eventId, 'new-photo', { id: savedFile.id, fullSrc: cloudinaryFullUrl, compressedSrc: cloudinaryCompressedUrl, eventId, userId });
+                    const userDoc = await useDatabase(() => UserModel.findById(userId).select('_id name email picture').lean());
+                    emitToEvent(eventId, 'new-photo', {
+                        id: savedFile.id,
+                        fullSrc: cloudinaryFullUrl,
+                        compressedSrc: cloudinaryCompressedUrl,
+                        eventId,
+                        userId: userDoc ?? { _id: userId, name: '', email: '', picture: '' },
+                    });
                 }
             } catch (err) {
                 logger.error("DB save failed during upload", err);
