@@ -48,12 +48,7 @@
     font-family: var(--font-body);
     font-size: 0.75rem;
     cursor: pointer;
-    color-scheme: light dark;
-
-    option {
-        background: var(--bg-input);
-        color: var(--text-primary);
-    }
+    color-scheme: light;
 
     &:focus {
         outline: none;
