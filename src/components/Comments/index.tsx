@@ -12,6 +12,7 @@ interface CommentsProps {
 }
 
 const Comments = ({ fileId, onCommentDeleted }: CommentsProps) => {
+    console.log('[Comments] rendering, fileId:', fileId);
     const toaster = useToaster();
     const [comments, setComments] = useState<IComment[]>([]);
     const [loading, setLoading] = useState(true);

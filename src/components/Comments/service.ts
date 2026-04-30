@@ -23,12 +23,25 @@ const headers = () => ({
 
 export const getComments = async (fileId: string): Promise<IComment[]> => {
     console.log('[getComments] fetching:', fileId);
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/comments/${fileId}`, { headers: headers() });
-    console.log('[getComments] response status:', res.status);
-    if (!res.ok) throw new Error('Failed to fetch comments');
-    const data = await res.json() as { comments: IComment[] };
-    console.log('[getComments] comments count:', data.comments.length);
-    return data.comments;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    
+    try {
+        const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/comments/${fileId}`, { 
+            headers: headers(),
+            signal: controller.signal
+        });
+        clearTimeout(timeout);
+        console.log('[getComments] response status:', res.status);
+        if (!res.ok) throw new Error('Failed to fetch comments');
+        const data = await res.json() as { comments: IComment[] };
+        console.log('[getComments] comments count:', data.comments.length);
+        return data.comments;
+    } catch (err) {
+        clearTimeout(timeout);
+        console.log('[getComments] error:', err);
+        throw err;
+    }
 };
 
 export const postComment = async (fileId: string, text: string): Promise<IComment> => {
