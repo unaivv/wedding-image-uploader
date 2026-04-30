@@ -225,14 +225,14 @@ const Challenge = ({ challenge }: IChallengeProps) => {
                     ) : myPhotos.length === 0 ? (
                         <p style={{ textAlign: 'center', color: '#888' }}>No tienes fotos subidas a este evento.</p>
                     ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                             {myPhotos.map(photo => (
                                 <div
                                     key={photo.id}
-                                    style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden' }}
+                                    style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden', aspectRatio: '1/1' }}
                                     onClick={() => handleSelectMyPhoto(photo)}
                                 >
-                                    <img src={photo.compressedSrc} alt={photo.id} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                                    <img src={photo.compressedSrc} alt={photo.id} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                 </div>
                             ))}
                         </div>
