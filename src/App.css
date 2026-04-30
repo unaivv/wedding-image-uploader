@@ -1,6 +1,9 @@
 .appShell {
     min-height: 100vh;
     position: relative;
+    padding: 0 2rem 2rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Subtle warm radial glow at the top */
@@ -20,4 +23,10 @@
 #root {
     position: relative;
     z-index: 1;
+}
+
+@media (max-width: 700px) {
+    .appShell {
+        padding: 0 0.75rem 1rem;
+    }
 }
