@@ -32,9 +32,11 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     // winnerPhoto needs to be defined before handleOpenWinnerLightbox
     const winnerParticipant = challenge?.winner ? challenge.participants.find(p => p.user._id === challenge.winner!._id) : null;
     const winnerFile = winnerParticipant?.file;
+    console.log('[Challenge] winnerFile:', winnerFile, 'winnerFile?.id:', winnerFile?.id);
     const winnerPhoto: IPhoto | null = winnerFile
         ? {
-              id: winnerFile.id,
+              id: winnerFile.id || winnerFile._id || 'MISSING_ID',
+              src: winnerFile.compressedSrc,
               src: winnerFile.compressedSrc,
               fullSrc: winnerFile.fullSrc ?? winnerFile.compressedSrc,
               alt: winnerFile.id,
