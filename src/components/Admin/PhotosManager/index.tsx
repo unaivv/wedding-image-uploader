@@ -129,7 +129,10 @@ const PhotosManager = () => {
                 <h2 className={styles.title}>Fotos</h2>
                 <div className={styles.toolbarRight}>
                     <SelectPicker
-                        data={uniqueUsers.map(u => ({ label: u.name || u.email, value: u._id }))}
+                        data={uniqueUsers
+                            .filter(u => u._id)
+                            .map(u => ({ label: u.name || u.email || 'Usuario desconocido', value: u._id }))
+                        }
                         value={filterUser}
                         onChange={setFilterUser}
                         placeholder="Filtrar por usuario"
