@@ -1,6 +1,7 @@
 import './App.css'
 import './index.css'
 import 'rsuite/dist/rsuite-no-reset.min.css';
+import './rsuite-theme.css';
 import { CustomProvider } from 'rsuite';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HomePage } from './pages/home';

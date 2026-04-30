@@ -1,0 +1,33 @@
+/* Overrides RSuite's primary blue with a gold palette.
+   Must be imported AFTER rsuite CSS so variables win. */
+.rs-theme-light,
+:root {
+  --rs-primary-50:  #fdf9f2;
+  --rs-primary-100: #f5e8cc;
+  --rs-primary-200: #ead4a0;
+  --rs-primary-300: #dfc078;
+  --rs-primary-400: #d4ac6a;
+  --rs-primary-500: #c9a86c;
+  --rs-primary-600: #b8936a;
+  --rs-primary-700: #a07a52;
+  --rs-primary-800: #7d5d3a;
+  --rs-primary-900: #5a4128;
+
+  --rs-color-focus-ring:                  rgba(201, 168, 108, 0.25);
+  --rs-input-focus-border-color:          #c9a86c;
+  --rs-btn-primary-bg:                    #c9a86c;
+  --rs-btn-primary-hover-bg:              #b8936a;
+  --rs-btn-primary-active-bg:             #a07a52;
+  --rs-btn-primary-text:                  #fff;
+  --rs-toggle-checked-bg:                 #c9a86c;
+  --rs-toggle-checked-hover-bg:           #b8936a;
+  --rs-listbox-option-selected-bg:        rgba(201, 168, 108, 0.12);
+  --rs-listbox-option-selected-text:      #c9a86c;
+  --rs-listbox-option-hover-bg:           rgba(201, 168, 108, 0.08);
+  --rs-picker-value:                      #c9a86c;
+  --rs-checkbox-checked-bg:               #c9a86c;
+  --rs-radio-checked-bg:                  #c9a86c;
+  --rs-progress-bar-bg:                   #c9a86c;
+  --rs-loader-ring-gap-color:             #c9a86c;
+  --rs-loader-rotor-color:                #c9a86c;
+}
