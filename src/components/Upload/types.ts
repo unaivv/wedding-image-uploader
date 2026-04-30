@@ -4,4 +4,6 @@ export interface IUploadProps {
     onlyButton?: boolean
     extraParams?: Record<string, string>
     onUpload?: (files: FileType[]) => void
+    loading?: boolean
+    children?: React.ReactNode
 }

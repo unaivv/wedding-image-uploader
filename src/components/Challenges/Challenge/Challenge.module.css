@@ -104,6 +104,17 @@
     padding: 1rem 0;
 }
 
+.challengeButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 0.5rem;
+}
+
+.challengeUploadBtn button {
+    padding: 0 !important;
+}
+
 @media (max-width: 600px) {
     .challengeCard {
         flex: 0 0 72vw;

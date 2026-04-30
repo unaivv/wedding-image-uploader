@@ -9,21 +9,23 @@ import type { IUploadProps } from './types';
 import { cn } from '../../utils/cn';
 import { logger } from '../../utils/logger';
 
-const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUploadProps) => {
+const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null, loading: externalLoading, children }: IUploadProps) => {
     const userEmail = auth.getUserEmail();
     const userName = auth.getUserName();
     const toaster = useToaster();
 
     const uploaderRef = useRef<UploaderInstance>(null);
 
-    const [loading, setLoading] = useState(false);
+    const [internalLoading, setInternalLoading] = useState(false);
+    const loading = externalLoading || internalLoading;
     const [files, setFiles] = useState<FileType[]>([]);
     const [progress, setProgress] = useState<Map<string | number, number>>(new Map());
     const [caption, setCaption] = useState('');
 
     const renderUploadInterior = () => {
+        if (children) return children;
         if (onlyButton) {
-            return <Button appearance="ghost">Selecciona tus fotos</Button>;
+            return <Button appearance="ghost" disabled={loading}>Subir una nueva</Button>;
         }
         return <>
             <span style={{
@@ -123,7 +125,7 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                     }
                 }}
                 onSuccess={(response, file) => {
-                    setLoading(false);
+                    setInternalLoading(false);
                     if (file.fileKey !== undefined) {
                         setProgress(prev => { const next = new Map(prev); next.delete(file.fileKey!); return next; });
                     }
@@ -140,14 +142,14 @@ const Upload = ({ onlyButton, extraParams = {}, onUpload = () => null }: IUpload
                     }
                 }}
                 onError={(reason) => {
-                    setLoading(false);
+                    setInternalLoading(false);
                     logger.error('upload failed', reason);
                     toaster.push(
                         <Message type="error" showIcon closable>Error al subir la foto. Inténtalo de nuevo.</Message>,
                         { placement: 'topEnd' }
                     );
                 }}
-                onUpload={() => setLoading(true)}
+                onUpload={() => setInternalLoading(true)}
                 fileList={files}
             >
                 <div className={cn(styles.uploadContainer, onlyButton && styles.onlyButton)}>

@@ -22,6 +22,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     const [myPhotosModalOpen, setMyPhotosModalOpen] = useState(false);
     const [myPhotos, setMyPhotos] = useState<{ id: string; compressedSrc: string; fullSrc: string }[]>([]);
     const [myPhotosLoading, setMyPhotosLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const [file, setFile] = useState<FileType | null>(() => {
         const backendFile = challenge.participants.find(p => p.user._id === auth.getUserId())?.file || null;
         if (!backendFile) return null;
@@ -65,6 +66,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     const handleOpenMyPhotos = async () => {
         setMyPhotosModalOpen(true);
         setMyPhotosLoading(true);
+        setUploading(true);
         try {
             const photos = await getMyPhotos(import.meta.env.VITE_EVENT_ID as string);
             setMyPhotos(photos);
@@ -77,6 +79,7 @@ const Challenge = ({ challenge }: IChallengeProps) => {
     };
 
     const handleSelectMyPhoto = async (photo: { id: string; compressedSrc: string; fullSrc: string }) => {
+        setUploading(true);
         try {
             await useExistingPhoto(photo.id, challenge.id);
             setFile({
@@ -90,6 +93,8 @@ const Challenge = ({ challenge }: IChallengeProps) => {
         } catch (err) {
             logger.error('use existing photo failed', err);
             toaster.push(<Message type="error" showIcon closable>Error al seleccionar la foto</Message>, { placement: 'topEnd' });
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -185,23 +190,32 @@ const Challenge = ({ challenge }: IChallengeProps) => {
             {file
                 ? renderFile()
                 : !isExpired && (
-                    <div style={{ display: 'flex', gap: 8 }}>
-                        <Upload
-                            onlyButton
-                            extraParams={{ challengeId: challenge.id }}
-                            onUpload={(files) => {
-                                if (files.length === 0) return;
-                                setFile(files[0]);
-                            }}
-                        />
-                        <Button appearance="ghost" onClick={handleOpenMyPhotos}>
-                            Mis fotos
+                    <div className={styles.challengeButtons}>
+                        <div className={styles.challengeUploadBtn}>
+                            <Upload
+                                onlyButton
+                                loading={uploading}
+                                extraParams={{ challengeId: challenge.id }}
+                                onUpload={(files) => {
+                                    if (files.length === 0) return;
+                                    setFile(files[0]);
+                                    setUploading(false);
+                                }}
+                            />
+                        </div>
+                        <Button 
+                            appearance="ghost" 
+                            onClick={handleOpenMyPhotos}
+                            disabled={uploading}
+                            loading={myPhotosLoading && uploading}
+                        >
+                            Seleccionar de tus fotos
                         </Button>
                     </div>
                 )
             }
 
-            <Modal open={myPhotosModalOpen} onClose={() => setMyPhotosModalOpen(false)} size="lg">
+            <Modal open={myPhotosModalOpen} onClose={() => { setMyPhotosModalOpen(false); setUploading(false); }} size="lg">
                 <Modal.Header>
                     <Modal.Title>Elige una foto tuya</Modal.Title>
                 </Modal.Header>
