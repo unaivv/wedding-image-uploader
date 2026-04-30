@@ -38,23 +38,6 @@
     gap: 4px;
 }
 
-.speedSelect {
-    height: 28px;
-    padding: 0 6px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border);
-    background: var(--bg-input);
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    cursor: pointer;
-    color-scheme: light;
-
-    &:focus {
-        outline: none;
-        border-color: var(--accent);
-    }
-}
 
 .toggleGroup {
     display: flex;

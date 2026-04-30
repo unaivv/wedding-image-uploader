@@ -256,15 +256,19 @@ const AllPhotos = () => {
                             ? <Button size="sm" appearance="subtle" onClick={stopSlideshow} startIcon={<PauseOutlineIcon />}>Pausar</Button>
                             : <div className={styles.slideshowGroup}>
                                 <Button size="sm" appearance="subtle" onClick={() => startSlideshow(sortedPhotos)} startIcon={<PlayOutlineIcon />}>Presentación</Button>
-                                <select
-                                    className={styles.speedSelect}
+                                <SelectPicker
+                                    data={[
+                                        { label: 'Lenta', value: 'slow' },
+                                        { label: 'Normal', value: 'normal' },
+                                        { label: 'Rápida', value: 'fast' },
+                                    ]}
                                     value={slideshowSpeed}
-                                    onChange={e => setSlideshowSpeed(e.target.value as SlideshowSpeed)}
-                                >
-                                    <option value="slow">Lenta</option>
-                                    <option value="normal">Normal</option>
-                                    <option value="fast">Rápida</option>
-                                </select>
+                                    onChange={v => v && setSlideshowSpeed(v as SlideshowSpeed)}
+                                    cleanable={false}
+                                    searchable={false}
+                                    size="sm"
+                                    style={{ width: 100 }}
+                                />
                             </div>
                     )}
                     {selectedIds.size > 0 && (
