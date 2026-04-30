@@ -22,6 +22,7 @@
     width: calc(100% + 4rem);
     margin-left: -2rem;
     margin-top: 1.25rem;
+    overflow: hidden;
 }
 
 .sliderWrapper::before,
@@ -53,6 +54,8 @@
     padding: 4px 2rem 16px;
     scrollbar-width: thin;
     scrollbar-color: var(--accent-border) transparent;
+    max-width: 100%;
+    overscroll-behavior: none;
 
     &::-webkit-scrollbar { height: 4px; }
     &::-webkit-scrollbar-track { background: transparent; }
