@@ -19,6 +19,7 @@
   --rs-btn-primary-hover-bg:              #b8936a;
   --rs-btn-primary-active-bg:             #a07a52;
   --rs-btn-primary-text:                  #fff;
+  --rs-btn-primary-disabled-bg:           #c9a86c;
   --rs-toggle-checked-bg:                 #c9a86c;
   --rs-toggle-checked-hover-bg:           #b8936a;
   --rs-listbox-option-selected-bg:        rgba(201, 168, 108, 0.12);
