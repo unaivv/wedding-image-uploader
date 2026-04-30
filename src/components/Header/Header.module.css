@@ -10,6 +10,8 @@
     z-index: 100;
     backdrop-filter: blur(12px);
     background: transparent;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .titleGroup {
