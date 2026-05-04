@@ -7,8 +7,11 @@ const BATCH_SIZE = 50;
 export const sendBulkEmail = async (to: string[], subject: string, html: string): Promise<void> => {
     for (let i = 0; i < to.length; i += BATCH_SIZE) {
         const batch = to.slice(i, i + BATCH_SIZE);
-        await Promise.all(
+        const results = await Promise.all(
             batch.map(email => resend.emails.send({ from: FROM_ADDRESS, to: email, subject, html }))
         );
+        for (const { error } of results) {
+            if (error) throw new Error(`Resend error: ${error.message}`);
+        }
     }
 };
