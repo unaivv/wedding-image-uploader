@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, Loader, Message, SelectPicker, useToaster } from 'rsuite';
-import { getAdminPhotos, bulkDeletePhotos, type AdminPhoto, type AdminUser } from '../service';
+import { getAdminPhotos, bulkDeletePhotos, sendGalleryEmail, type AdminPhoto, type AdminUser } from '../service';
 import { Lightbox } from '../../Lightbox';
 import { ConfirmModal } from '../../ConfirmModal';
 import { logger } from '../../../utils/logger';
@@ -16,9 +16,10 @@ const PhotosManager = () => {
     const [hasMore, setHasMore] = useState(true);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [deleting, setDeleting] = useState(false);
+    const [sendingEmail, setSendingEmail] = useState(false);
     const [filterUser, setFilterUser] = useState<string | null>(null);
     const [lightboxIndex, setLightboxIndex] = useState(-1);
-    const [confirm, setConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
+    const [confirm, setConfirm] = useState<{ message: string; confirmLabel: string; danger?: boolean; onConfirm: () => void } | null>(null);
     const pageRef = useRef(1);
     const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -76,6 +77,8 @@ const PhotosManager = () => {
     const handleBulkDelete = () => {
         setConfirm({
             message: `¿Eliminar ${selectedIds.size} foto${selectedIds.size !== 1 ? 's' : ''}? Esta acción no se puede deshacer.`,
+            confirmLabel: 'Eliminar',
+            danger: true,
             onConfirm: () => {
                 setDeleting(true);
                 setConfirm(null);
@@ -98,6 +101,8 @@ const PhotosManager = () => {
         e.stopPropagation();
         setConfirm({
             message: '¿Eliminar esta foto? Esta acción no se puede deshacer.',
+            confirmLabel: 'Eliminar',
+            danger: true,
             onConfirm: () => {
                 setConfirm(null);
                 bulkDeletePhotos([id])
@@ -110,6 +115,31 @@ const PhotosManager = () => {
                         logger.error('delete one failed', err);
                         toaster.push(<Message type="error" showIcon closable>Error al eliminar</Message>, { placement: 'topEnd' });
                     });
+            },
+        });
+    };
+
+    const handleSendGalleryEmail = () => {
+        setConfirm({
+            message: 'Se enviará un email con el enlace de la galería a todos los usuarios que hayan subido fotos. ¿Continuar?',
+            confirmLabel: 'Enviar',
+            onConfirm: () => {
+                setSendingEmail(true);
+                setConfirm(null);
+                sendGalleryEmail(import.meta.env.VITE_EVENT_ID as string)
+                    .then(({ sent }) => {
+                        toaster.push(
+                            <Message type="success" showIcon closable>
+                                Email enviado a {sent} {sent === 1 ? 'destinatario' : 'destinatarios'}
+                            </Message>,
+                            { placement: 'topEnd' }
+                        );
+                    })
+                    .catch((err: unknown) => {
+                        logger.error('send gallery email failed', err);
+                        toaster.push(<Message type="error" showIcon closable>Error al enviar el email</Message>, { placement: 'topEnd' });
+                    })
+                    .finally(() => setSendingEmail(false));
             },
         });
     };
@@ -140,6 +170,9 @@ const PhotosManager = () => {
                         size="sm"
                         style={{ width: 180 }}
                     />
+                    <Button size="sm" appearance="ghost" onClick={handleSendGalleryEmail} loading={sendingEmail}>
+                        Enviar galería por email
+                    </Button>
                     {selectedIds.size > 0
                         ? <Button size="sm" color="red" appearance="ghost" onClick={handleBulkDelete} loading={deleting}>
                             Eliminar ({selectedIds.size})
@@ -193,9 +226,9 @@ const PhotosManager = () => {
             <ConfirmModal
                 open={confirm !== null}
                 message={confirm?.message ?? ''}
-                confirmLabel="Eliminar"
-                danger
-                loading={deleting}
+                confirmLabel={confirm?.confirmLabel ?? 'Confirmar'}
+                danger={confirm?.danger}
+                loading={deleting || sendingEmail}
                 onConfirm={() => confirm?.onConfirm()}
                 onCancel={() => setConfirm(null)}
             />

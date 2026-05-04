@@ -7,8 +7,11 @@ import FileModel from '../models/file';
 import CommentModel from '../models/comment';
 import ChallengeModel from '../models/challenge';
 import EventModel from '../models/event';
+import EmailLogModel from '../models/emailLog';
 import { deleteFileFromCloudinary, extractPublicId } from '../services/useCloudinary';
 import { logger } from '../services/logger';
+import { buildGalleryLink } from '../services/galleryLinkService';
+import { sendBulkEmail } from '../services/emailService';
 
 const router = Router();
 
@@ -244,6 +247,49 @@ router.delete('/photos', authenticateAdmin, async (req: Request, res: Response):
         res.json({ deleted: files.length });
     } catch (err) {
         logger.error('admin bulk delete photos failed', err);
+        sendError(res, 500, 'Internal server error');
+    }
+});
+
+// ── Gallery email ──────────────────────────────────────────
+router.post('/send-gallery-link', authenticateAdmin, async (req: Request, res: Response): Promise<void> => {
+    const { eventId } = req.body as { eventId?: string };
+    if (!eventId) { sendError(res, 400, 'Missing eventId'); return; }
+
+    let link = '';
+    try {
+        const [userIds] = await useDatabase(async () =>
+            Promise.all([
+                FileModel.distinct('userId', { eventId: new mongoose.Types.ObjectId(eventId) }),
+            ])
+        );
+        const users = await useDatabase(async () =>
+            UserModel.find({ _id: { $in: userIds as mongoose.Types.ObjectId[] } }).select('email').exec()
+        );
+        const emails = (users as { email: string }[]).map(u => u.email).filter(Boolean);
+
+        if (emails.length === 0) { sendError(res, 400, 'No recipients found'); return; }
+
+        link = buildGalleryLink(eventId);
+        const subject = '¡Aquí están todas las fotos de la boda!';
+        const html = `
+            <p>Hola,</p>
+            <p>Gracias por compartir tus fotos. Aquí tienes el enlace con la galería completa:</p>
+            <p><a href="${link}">${link}</a></p>
+            <p>El enlace es válido durante 7 días.</p>
+        `;
+
+        await sendBulkEmail(emails, subject, html);
+        await useDatabase(async () =>
+            EmailLogModel.create({ sentAt: new Date(), recipientsCount: emails.length, link, status: 'sent' })
+        );
+
+        res.json({ sent: emails.length, link });
+    } catch (err) {
+        logger.error('send gallery link failed', err);
+        await useDatabase(async () =>
+            EmailLogModel.create({ sentAt: new Date(), recipientsCount: 0, link, status: 'failed', errorMessage: String(err) })
+        ).catch((logErr: unknown) => logger.error('email log write failed', logErr));
         sendError(res, 500, 'Internal server error');
     }
 });

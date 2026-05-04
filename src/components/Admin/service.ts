@@ -158,3 +158,12 @@ export const bulkDeletePhotos = async (ids: string[]): Promise<void> => {
     });
     if (!res.ok) throw new Error('Failed to delete photos');
 };
+
+// ── Gallery email ──────────────────────────────────────────
+export const sendGalleryEmail = async (eventId: string): Promise<{ sent: number; link: string }> => {
+    const res = await fetch(`${BASE}/send-gallery-link`, {
+        method: 'POST', headers: headers(), body: JSON.stringify({ eventId }),
+    });
+    if (!res.ok) throw new Error('Failed to send gallery email');
+    return res.json() as Promise<{ sent: number; link: string }>;
+};

@@ -8,6 +8,7 @@ import { HomePage } from './pages/home';
 import { UploadPage } from './pages/upload';
 import { AdminPage } from './pages/admin';
 import { Login } from './pages/login';
+import { GalleryPage } from './pages/gallery';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import PrivateRoute from './components/PrivateRoute';
 import { AdminRoute } from './components/Admin/AdminRoute';
@@ -37,6 +38,7 @@ const App = () => {
                 <Route path="admin" element={<AdminPage />} />
               </Route>
               <Route path="login" element={<Login />} />
+              <Route path="gallery/:token" element={<GalleryPage />} />
             </Routes>
             </div>
           </CustomProvider>
