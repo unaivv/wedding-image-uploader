@@ -87,6 +87,10 @@ router.delete('/:commentId', authenticateUser, async (req: Request, res: Respons
         if (comment.userId.toString() !== userId) { sendError(res, 403, 'Not authorized'); return; }
 
         await useDatabase(async () => CommentModel.findByIdAndDelete(commentId).exec());
+
+        const file = await useDatabase(async () => FileModel.findById(comment.fileId).exec());
+        if (file) emitToEvent(file.eventId.toString(), 'delete-comment', { fileId: comment.fileId.toString() });
+
         res.json({ success: true });
     } catch (err) {
         logger.error('delete comment failed', err);

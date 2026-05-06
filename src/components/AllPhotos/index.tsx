@@ -150,6 +150,10 @@ const AllPhotos = () => {
             const { fileId } = data as { fileId: string; comment: IComment };
             setCommentCounts(prev => ({ ...prev, [fileId]: (prev[fileId] ?? 0) + 1 }));
         },
+        'delete-comment': (data) => {
+            const { fileId } = data as { fileId: string };
+            setCommentCounts(prev => ({ ...prev, [fileId]: Math.max((prev[fileId] ?? 0) - 1, 0) }));
+        },
     });
 
     useEffect(() => {
@@ -365,7 +369,6 @@ const AllPhotos = () => {
                             onClose={() => { setIndex(-1); setSearchParams({}); stopSlideshow(); }}
                             onIndexChange={(i) => { setIndex(i); setSearchParams({ photo: sortedLightbox[i]?.id ?? '' }); }}
                             commentCounts={commentCounts}
-                            onCommentDeleted={(fileId) => setCommentCounts(prev => ({ ...prev, [fileId]: Math.max((prev[fileId] ?? 0) - 1, 0) }))}
                         />
                     )}
                 </>
