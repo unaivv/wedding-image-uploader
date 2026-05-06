@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - 'server/**'
+      - 'src/**'
+      - 'index.html'
+      - 'vite.config.*'
+      - 'package.json'
 
 jobs:
   deploy-backend:
